@@ -12,7 +12,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../libs/sockwrap.h"
+
 #define BUF_LEN 100
+
+const char *prog_name = "ex03";
 
 int main(int argc, char const *argv[])
 {
@@ -34,38 +38,20 @@ int main(int argc, char const *argv[])
     addr.sin_family = AF_INET;
 
     /* Convert address and set */
-    if (inet_pton(AF_INET, argv[1], &ip) <= 0)
-    {
-        fprintf(stderr, "Not a valid IP address!\n");
-        return -1;
-    }
+    Inet_pton(AF_INET, argv[1], &ip);
     addr.sin_addr = ip;
     printf("Address correctly set!\n");
 
     /* Convert port and set */
-    if (sscanf(argv[2], "%hu", &port) <= 0)
-    {
-        fprintf(stderr, "Not a valid port!\n");
-        return -1;
-    }
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(atoi(argv[2]));
     printf("Port correctly set!\n");
 
     /* Open the socket */
-    s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (s == -1)
-    {
-        fprintf(stderr, "Cannot create socket.\n");
-        return -1;
-    }
+    s = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     printf("Socket correctly opened!\n");
 
     /* Connect the socket */
-    if (connect(s, (struct sockaddr*) &addr, sizeof(addr)) == -1)
-    {
-        fprintf(stderr, "Cannot connect socket.\n");
-        return -1;
-    }
+    Connect(s, (struct sockaddr*) &addr, sizeof(addr));
     printf("Socket correctly connected!\n");
 
     while (1)
@@ -91,26 +77,18 @@ int main(int argc, char const *argv[])
         /* Prepare and send buffer */
         memset(buffer, 0, BUF_LEN);
         sprintf(buffer, "%hu %hu\r\n", n1, n2);
-        if (send(s, buffer, strlen(buffer), 0) < 0)
-        {
-            fprintf(stderr, "Cannot write on socket.\n");
-            return -1;
-        }
+        Send(s, buffer, strlen(buffer), 0);
         
         /* Clear and receive buffer */
         memset(buffer, 0, BUF_LEN);
-        if (recv(s, buffer, BUF_LEN, 0) < 0)
-        {
-            fprintf(stderr, "Cannot receive from socket.\n");
-            return -1;
-        }
+        Recvline(s, buffer, BUF_LEN, 0);
 
         /* Print the answer */
         printf("Answer: %s", buffer);
     }
 
     /* Close the socket */
-    close(s);
+    Close(s);
 
     return 0;
 }

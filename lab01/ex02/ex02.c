@@ -12,10 +12,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../libs/sockwrap.h"
+
+const char *prog_name = "ex02";
+
 int main(int argc, char const *argv[])
 {
     int s;
-    uint16_t port;
     struct sockaddr_in addr;
     struct in_addr ip;
 
@@ -31,42 +34,24 @@ int main(int argc, char const *argv[])
     addr.sin_family = AF_INET;
 
     /* Convert address and set */
-    if (inet_pton(AF_INET, argv[1], &ip) <= 0)
-    {
-        fprintf(stderr, "Not a valid IP address!\n");
-        return -1;
-    }
+    Inet_pton(AF_INET, argv[1], &ip);
     addr.sin_addr = ip;
     printf("Address correctly set!\n");
 
     /* Convert port and set */
-    if (sscanf(argv[2], "%hu", &port) <= 0)
-    {
-        fprintf(stderr, "Not a valid port!\n");
-        return -1;
-    }
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(atoi(argv[2]));
     printf("Port correctly set!\n");
 
     /* Open the socket */
-    s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (s == -1)
-    {
-        fprintf(stderr, "Cannot create socket.\n");
-        return -1;
-    }
+    s = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     printf("Socket correctly opened!\n");
 
     /* Connect the socket */
-    if (connect(s, (struct sockaddr*) &addr, sizeof(addr)) == -1)
-    {
-        fprintf(stderr, "Cannot connect socket.\n");
-        return -1;
-    }
+    Connect(s, (struct sockaddr*) &addr, sizeof(addr));
     printf("Socket correctly connected!\n");
 
     /* Close the socket */
-    close(s);
+    Close(s);
 
     return 0;
 }

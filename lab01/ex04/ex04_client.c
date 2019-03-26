@@ -13,19 +13,22 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../libs/sockwrap.h"
+
 #define BUF_LEN 32
 #define TIMEOUT 5
 
 int s;
+const char *prog_name = "ex04_client";
 
 void sig_handler(int signal)
 {
     if (signal == SIGALRM)
     {
         /* Print message, close socket and terminate */
-        printf("CLIENT INFO: no response received.\n");
+        printf("(%s) Info - No response received.\n", prog_name);
         close(s);
-        printf("CLIENT INFO: socket correctly closed.\n");
+        printf("(%s) Info - Socket correctly closed.\n", prog_name);
         exit(0);
     }
 }
@@ -41,7 +44,7 @@ int main(int argc, char const *argv[])
     /* Check input parameters */
     if (argc < 4)
     {
-        fprintf(stderr, "CLIENT ERROR: not enough input parameters.\n");
+        fprintf(stderr, "(%s) Error - Not enough input parameters.\n", prog_name);
         return -1;
     }
 
@@ -50,57 +53,33 @@ int main(int argc, char const *argv[])
     addr.sin_family = AF_INET;
 
     /* Convert address and set */
-    if (inet_pton(AF_INET, argv[1], &ip) <= 0)
-    {
-        fprintf(stderr, "CLIENT ERROR: not a valid IP address.\n");
-        return -1;
-    }
+    Inet_pton(AF_INET, argv[1], &ip);
     addr.sin_addr = ip;
-    printf("CLIENT INFO: address correctly set (%s).\n", inet_ntoa(addr.sin_addr));
+    printf("(%s) Info - address correctly set: %s.\n", prog_name, inet_ntoa(addr.sin_addr));
 
     /* Convert port and set */
-    if (sscanf(argv[2], "%hu", &port) <= 0)
-    {
-        fprintf(stderr, "CLIENT ERROR: not a valid port.\n");
-        return -1;
-    }
-    addr.sin_port = htons(port);
-    printf("CLIENT INFO: port correctly set (%hu).\n", ntohs(addr.sin_port));
+    addr.sin_port = htons(atoi(argv[2]));
+    printf("(%s) Info - Port correctly set: %hu.\n", prog_name, ntohs(addr.sin_port));
 
     /* Open the socket */
-    s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (s == -1)
-    {
-        fprintf(stderr, "CLIENT ERROR: cannot create socket.\n");
-        return -1;
-    }
-    printf("CLIENT INFO: socket correctly opened.\n");
+    s = Socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    printf("(%s) Info - Socket correctly opened.\n", prog_name);
 
     /* Send a datagram */
-    if (sendto(s, argv[3], strlen(argv[3]), 0, (struct sockaddr*) &addr, sizeof(addr)) == -1)
-    {
-        fprintf(stderr, "CLIENT ERROR: cannot write on socket.\n");
-        close(s);
-        return -1;
-    }
-    printf("CLIENT INFO: datagram sent (\"%s\" to %s:%hu).\n", argv[3], inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    Sendto(s, argv[3], strlen(argv[3]), 0, (struct sockaddr*) &addr, sizeof(addr));
+    printf("(%s) Info - Datagram sent: \"%s\" to %s:%hu.\n", prog_name, argv[3], inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
     /* Setup the SIGALRM handler */
     signal(SIGALRM, sig_handler);
     alarm(TIMEOUT);
 
     /* Receive a datagram */
-    if (recvfrom(s, buffer, BUF_LEN, 0, (struct sockaddr*) &addr, &len) == -1)
-    {
-        fprintf(stderr, "CLIENT ERROR: cannot read from socket.\n");
-        close(s);
-        return -1;
-    }
-    printf("CLIENT INFO: datagram received (\"%s\" from %s:%hu).\n", buffer, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    Recvfrom(s, buffer, BUF_LEN, 0, (struct sockaddr*) &addr, &len);
+    printf("(%s) Info - Datagram received: \"%s\" from %s:%hu.\n", prog_name, buffer, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
     /* Close the socket */
-    close(s);
-    printf("CLIENT INFO: socket correctly closed.\n");
+    Close(s);
+    printf("(%s) Info - Socket correctly closed.\n", prog_name);
 
     return 0;
 }
