@@ -22,9 +22,9 @@ void sig_handler(int signal)
     if (signal == SIGINT)
     {
         /* Close socket, print message and terminate */
-        printf("SERVER INFO: received termination command!\n");
+        printf("\nSERVER INFO: received termination command.\n");
         close(s);
-        printf("SERVER INFO: socket correctly closed!\n");
+        printf("SERVER INFO: socket correctly closed.\n");
         exit(0);
     }
 }
@@ -102,6 +102,7 @@ int main(int argc, char const *argv[])
 
     /* Close the socket */
     close(s);
+    printf("SERVER INFO: socket correctly closed.\n");
 
     return 0;
 }

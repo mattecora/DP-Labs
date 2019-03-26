@@ -23,9 +23,9 @@ void sig_handler(int signal)
     if (signal == SIGALRM)
     {
         /* Print message, close socket and terminate */
-        printf("CLIENT INFO: no response received!\n");
+        printf("CLIENT INFO: no response received.\n");
         close(s);
-        printf("CLIENT INFO: socket correctly closed!\n");
+        printf("CLIENT INFO: socket correctly closed.\n");
         exit(0);
     }
 }
@@ -100,6 +100,7 @@ int main(int argc, char const *argv[])
 
     /* Close the socket */
     close(s);
+    printf("CLIENT INFO: socket correctly closed.\n");
 
     return 0;
 }
