@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../libs/errlib.h"
 #include "../../libs/sockwrap.h"
 
 #define BUF_LEN 32
@@ -43,10 +44,7 @@ int main(int argc, char const *argv[])
 
     /* Check input parameters */
     if (argc < 4)
-    {
-        fprintf(stderr, "(%s) Error - Not enough input parameters.\n", prog_name);
-        return -1;
-    }
+        err_quit("(%s) Error - Not enough input parameters.", prog_name);
 
     /* Clear the memory and set address family */
     memset(&addr, 0, sizeof(addr));
@@ -55,7 +53,7 @@ int main(int argc, char const *argv[])
     /* Convert address and set */
     Inet_pton(AF_INET, argv[1], &ip);
     addr.sin_addr = ip;
-    printf("(%s) Info - address correctly set: %s.\n", prog_name, inet_ntoa(addr.sin_addr));
+    printf("(%s) Info - Address correctly set: %s.\n", prog_name, inet_ntoa(addr.sin_addr));
 
     /* Convert port and set */
     addr.sin_port = htons(atoi(argv[2]));

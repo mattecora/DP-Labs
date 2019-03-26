@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "../../libs/errlib.h"
 #include "../../libs/sockwrap.h"
 
 #define BUF_LEN 32
@@ -41,10 +42,7 @@ int main(int argc, char const *argv[])
 
     /* Check input parameters */
     if (argc < 2)
-    {
-        fprintf(stderr, "(%s) Error - Not enough input parameters.\n", prog_name);
-        return -1;
-    }
+        err_quit("(%s) Error - Not enough input parameters.", prog_name);
 
     /* Clear the memory and set address family */
     memset(&addr, 0, sizeof(addr));
