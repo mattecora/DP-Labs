@@ -89,7 +89,7 @@ again:
     return n;
 }
 
-ssize_t Write(int fd, void *bufptr, size_t nbytes)
+ssize_t Write(int fd, const void *bufptr, size_t nbytes)
 {
     if (write(fd, bufptr, nbytes) != nbytes)
         err_sys("(%s) Error - write() failed", prog_name);
@@ -114,7 +114,7 @@ ssize_t Recvfrom(int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr
     return n;
 }
 
-ssize_t Send(int fd, void *bufptr, size_t nbytes, int flags)
+ssize_t Send(int fd, const void *bufptr, size_t nbytes, int flags)
 {
     if (send(fd, bufptr, nbytes, flags) != nbytes)
         err_sys("(%s) Error - send() failed", prog_name);
@@ -166,7 +166,7 @@ ssize_t Readn(int fd, void *bufptr, size_t nbytes)
     return n;
 }
 
-ssize_t writen(int fd, void *bufptr, size_t nbytes)
+ssize_t writen(int fd, const void *bufptr, size_t nbytes)
 {
     size_t nleft;
     ssize_t nwritten;
@@ -192,7 +192,7 @@ ssize_t writen(int fd, void *bufptr, size_t nbytes)
     return nbytes;
 }
 
-ssize_t Writen(int fd, void *bufptr, size_t nbytes)
+ssize_t Writen(int fd, const void *bufptr, size_t nbytes)
 {
     if (writen(fd, bufptr, nbytes) != nbytes)
         err_sys("(%s) Error - writen() failed", prog_name);
@@ -237,7 +237,7 @@ ssize_t Recvn(int fd, void *bufptr, size_t nbytes, int flags)
     return n;
 }
 
-ssize_t sendn(int fd, void *bufptr, size_t nbytes, int flags)
+ssize_t sendn(int fd, const void *bufptr, size_t nbytes, int flags)
 {
     size_t nleft;
     ssize_t nwritten;
@@ -263,7 +263,7 @@ ssize_t sendn(int fd, void *bufptr, size_t nbytes, int flags)
     return nbytes;
 }
 
-ssize_t Sendn(int fd, void *bufptr, size_t nbytes, int flags)
+ssize_t Sendn(int fd, const void *bufptr, size_t nbytes, int flags)
 {
     if (sendn(fd, bufptr, nbytes, flags) != nbytes)
         err_sys("(%s) Error - writen() failed", prog_name);

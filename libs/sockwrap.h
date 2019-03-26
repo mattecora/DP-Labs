@@ -34,23 +34,23 @@ void        Shutdown    (int sockfd, int howto);
 /* -------- Read/write functions -------------------------------------------- */
 
 ssize_t     Read        (int fd, void *bufptr, size_t nbytes);
-ssize_t     Write       (int fd, void *bufptr, size_t nbytes);
+ssize_t     Write       (int fd, const void *bufptr, size_t nbytes);
 ssize_t     Recv        (int fd, void *bufptr, size_t nbytes, int flags);
 ssize_t     Recvfrom    (int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr *sa, socklen_t *salenptr);
-ssize_t     Send        (int fd, void *bufptr, size_t nbytes, int flags);
+ssize_t     Send        (int fd, const void *bufptr, size_t nbytes, int flags);
 ssize_t     Sendto      (int fd, const void *bufptr, size_t nbytes, int flags, const struct sockaddr *sa, socklen_t salen);
 
 /* -------- Read/write n bytes functions ------------------------------------ */
 
 ssize_t     readn       (int fd, void *bufptr, size_t nbytes);
 ssize_t     Readn       (int fd, void *bufptr, size_t nbytes);
-ssize_t     writen      (int fd, void *bufptr, size_t nbytes);
-ssize_t     Writen      (int fd, void *bufptr, size_t nbytes);
+ssize_t     writen      (int fd, const void *bufptr, size_t nbytes);
+ssize_t     Writen      (int fd, const void *bufptr, size_t nbytes);
 
 ssize_t     recvn       (int fd, void *bufptr, size_t nbytes, int flags);
 ssize_t     Recvn       (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     sendn       (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     Sendn       (int fd, void *bufptr, size_t nbytes, int flags);
+ssize_t     sendn       (int fd, const void *bufptr, size_t nbytes, int flags);
+ssize_t     Sendn       (int fd, const void *bufptr, size_t nbytes, int flags);
 
 ssize_t     readline    (int fd, void *bufptr, size_t maxlen);
 ssize_t     Readline    (int fd, void *bufptr, size_t maxlen);
