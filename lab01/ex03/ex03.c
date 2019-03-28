@@ -21,7 +21,7 @@ const char *prog_name = "ex03";
 int main(int argc, char const *argv[])
 {
     int s;
-    uint16_t port, n1, n2;
+    uint16_t n1, n2;
     char buffer[BUF_LEN];
     struct sockaddr_in addr;
     struct in_addr ip;

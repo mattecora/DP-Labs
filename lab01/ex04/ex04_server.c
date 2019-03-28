@@ -35,7 +35,7 @@ void sig_handler(int signal)
 
 int main(int argc, char const *argv[])
 {
-    int len;
+    socklen_t len;
     char buffer[BUF_LEN];
     struct sockaddr_in addr;
     struct in_addr ip;
@@ -66,6 +66,9 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
+        /* Setup initial len value */
+        len = sizeof(struct sockaddr_in);
+        
         /* Receive a datagram */
         Recvfrom(s, buffer, BUF_LEN, 0, (struct sockaddr*) &addr, &len);
         printf("(%s) Info - Datagram received: \"%s\" from %s:%hu.\n", prog_name, buffer, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));

@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include <arpa/inet.h>
-#include <signal.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -22,25 +22,14 @@
 int s;
 const char *prog_name = "ex04_client";
 
-void sig_handler(int signal)
-{
-    if (signal == SIGALRM)
-    {
-        /* Print message, close socket and terminate */
-        printf("(%s) Info - No response received.\n", prog_name);
-        close(s);
-        printf("(%s) Info - Socket correctly closed.\n", prog_name);
-        exit(0);
-    }
-}
-
 int main(int argc, char const *argv[])
 {
-    int len;
-    uint16_t port;
+    socklen_t len;
     char buffer[BUF_LEN];
+    fd_set readfds;
     struct sockaddr_in addr;
     struct in_addr ip;
+    struct timeval timeout;
 
     /* Check input parameters */
     if (argc < 4)
@@ -67,13 +56,29 @@ int main(int argc, char const *argv[])
     Sendto(s, argv[3], strlen(argv[3]), 0, (struct sockaddr*) &addr, sizeof(addr));
     printf("(%s) Info - Datagram sent: \"%s\" to %s:%hu.\n", prog_name, argv[3], inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
-    /* Setup the SIGALRM handler */
-    signal(SIGALRM, sig_handler);
-    alarm(TIMEOUT);
+    /* Setup the timeout structure */
+    timeout.tv_sec = TIMEOUT;
+    timeout.tv_usec = 0;
+        
+    /* Setup the fd_set */
+    FD_ZERO(&readfds);
+    FD_SET(s, &readfds);
 
-    /* Receive a datagram */
-    Recvfrom(s, buffer, BUF_LEN, 0, (struct sockaddr*) &addr, &len);
-    printf("(%s) Info - Datagram received: \"%s\" from %s:%hu.\n", prog_name, buffer, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    /* Setup initial len value */
+    len = sizeof(struct sockaddr_in);
+
+    /* Wait on the socket for reading */
+    if (Select(s+1, &readfds, NULL, NULL, &timeout) > 0)
+    {
+        /* Receive a datagram */
+        Recvfrom(s, buffer, BUF_LEN, 0, (struct sockaddr*) &addr, &len);
+        printf("(%s) Info - Datagram received: \"%s\" from %s:%hu.\n", prog_name, buffer, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    }
+    else
+    {
+        /* No datagram received */
+        printf("(%s) Info - No response received.\n", prog_name);
+    }
 
     /* Close the socket */
     Close(s);
