@@ -13,11 +13,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../../../../libs/errlib.h"
-#include "../../../../libs/sockwrap.h"
+#include "../errlib.h"
+#include "../sockwrap.h"
 #include "client_lib.h"
 
-const char *prog_name;
+const char* prog_name;
 
 int main(int argc, char const *argv[])
 {
@@ -28,18 +28,18 @@ int main(int argc, char const *argv[])
 
 	/* Check number of parameters */
     if (argc < 4)
-		err_quit("(%s) Error - Not enough input parameters.", prog_name);
+		err_quit("Not enough input parameters");
 	
 	/* Parse the server address and port */
     addr_setup(argv[1], argv[2], &server_addr);
 
 	/* Open the socket */
     sock = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    printf("(%s) Info - Socket correctly opened.\n", prog_name);
 
 	/* Connect the socket */
 	Connect(sock, (struct sockaddr*) &server_addr, sizeof(server_addr));
-	printf("(%s) Info - Socket correctly connected.\n", prog_name);
+	
+	info_msg("Connection established with %s:%s", argv[1], argv[2]);
 
 	/* Loop through the arguments */
 	for (i = 3; i < argc; i++)
@@ -47,8 +47,8 @@ int main(int argc, char const *argv[])
 		/* Send a request for the file */
 		send_request(sock, argv[i]);
 
-		/* Read the response */
-		if (read_response(sock, argv[i]) == 0)
+		/* Receive the response */
+		if (recv_response(sock, argv[i]) == 0)
 		{
 			/* There was an error, close the connection */
 			break;
@@ -57,6 +57,8 @@ int main(int argc, char const *argv[])
 
 	/* Close the socket */
 	Close(sock);
+
+	info_msg("Connection closed with %s:%s", argv[1], argv[2]);
 
     return 0;
 }

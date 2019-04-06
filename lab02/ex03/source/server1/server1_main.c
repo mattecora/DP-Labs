@@ -7,19 +7,34 @@
 #include <stdlib.h>
 
 #include <arpa/inet.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../../../../libs/errlib.h"
-#include "../../../../libs/sockwrap.h"
+#include "../errlib.h"
+#include "../sockwrap.h"
 #include "server_lib.h"
 
+#define BACKLOG 10
+
+int list_sock;
 const char* prog_name;
+
+void sigint_handler(int sig)
+{
+    if (sig == SIGINT)
+    {
+        /* Close the socket and terminate */
+        Close(list_sock);
+        info_msg("Server stopped");
+        exit(0);
+    }
+}
 
 int main(int argc, char const *argv[])
 {
-    int list_sock, conn_sock;
+    int conn_sock;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len;
 
@@ -27,22 +42,23 @@ int main(int argc, char const *argv[])
 
     /* Check input parameters */
     if (argc < 2)
-        err_quit("(%s) Error - Not enough input parameters.", prog_name);
+        err_quit("Not enough input parameters");
     
     /* Parse the server port */
     addr_setup(NULL, argv[1], &server_addr);
 
     /* Open the socket */
     list_sock = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    printf("(%s) Info - Socket correctly opened.\n", prog_name);
 
     /* Bind the socket */
     Bind(list_sock, (struct sockaddr*) &server_addr, sizeof(server_addr));
-    printf("(%s) Info - Socket correctly bound.\n", prog_name);
 
     /* Start listening on the socket */
-    Listen(list_sock, 1);
-    printf("(%s) Info - Socket started listening.\n", prog_name);
+    Listen(list_sock, BACKLOG);
+    info_msg("Server started on port %s", argv[1]);
+
+    /* Setup the handler for SIGINT */
+    signal(SIGINT, sigint_handler);
 
     while (1)
     {
@@ -52,8 +68,8 @@ int main(int argc, char const *argv[])
         /* Accept a connection from a client */
         conn_sock = Accept(list_sock, (struct sockaddr*) &client_addr, &client_addr_len);
 
-        printf("(%s) Info - Connection opened with %s:%hu.\n",
-            prog_name, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        info_msg("Connection established with %s:%hu",
+            inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         /* Handle requests from the client */
         while (handle_request(conn_sock));
@@ -61,8 +77,8 @@ int main(int argc, char const *argv[])
         /* Close the connected socket */
         Close(conn_sock);
 
-        printf("(%s) Info - Connection closed with %s:%hu.\n",
-            prog_name, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        info_msg("Connection closed with %s:%hu",
+            inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
     }
 
     return 0;

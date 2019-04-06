@@ -12,13 +12,15 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../../../../libs/errlib.h"
-#include "../../../../libs/sockwrap.h"
+#include "../errlib.h"
+#include "../sockwrap.h"
 
+#define TIMEOUT 15
 #define MAXLEN  4096
 #define MSG_OK  "+OK\r\n"
 #define MSG_ERR "-ERR\r\n"
@@ -47,13 +49,13 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr);
 void send_request(int sock, const char *filename);
 
 /* 
- * Description: Reads the response to a request from the given socket.
+ * Description: Receives the response to a request from the given socket.
  * 
  * Parameters:  - the connected socket to which the request was sent (int)
  *              - the name of the requested file (char*)
  * 
  * Returns:     0 in case of error, 1 in case of success
  */
-int read_response(int sock, const char *filename);
+int recv_response(int sock, const char *filename);
 
 #endif

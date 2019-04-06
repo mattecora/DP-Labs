@@ -12,14 +12,16 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../../../../libs/errlib.h"
-#include "../../../../libs/sockwrap.h"
+#include "../errlib.h"
+#include "../sockwrap.h"
 
+#define TIMEOUT 15
 #define MAXLEN  4096
 #define MSG_OK  "+OK\r\n"
 #define MSG_ERR "-ERR\r\n"
@@ -54,25 +56,25 @@ int parse_request(char *request, char *filename);
  * Parameters:  - the connected socket to which the file should be sent (int)
  *              - the name of the file to be sent (char*)
  * 
- * Returns:     nothing
+ * Returns:     1 in case the file was transfered successfully, 0 otherwise
  */
-void send_file(int conn_sock, char *filename);
+int send_file(int conn_sock, char *filename);
 
 /* 
  * Description: Sends an error message according to the described protocol.
  * 
  * Parameters:  - the connected socket to which the error should be sent (int)
  * 
- * Returns:     nothing
+ * Returns:     1 in case of success, 0 otherwise
  */
-void send_error(int conn_sock);
+int send_error(int conn_sock);
 
 /* 
  * Description: Handles a request coming from the given connected socket.
  * 
  * Parameters:  - the connected socket from which the request is coming
  * 
- * Returns:     0 if no request has been handled, 1 otherwise
+ * Returns:     1 in case a request has been handled, 0 otherwise
  */
 int handle_request(int conn_sock);
 
