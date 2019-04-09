@@ -32,6 +32,7 @@
 #define MAX_UINT16T 0xffff
 //#define STATE_OK 0x00
 //#define STATE_V  0x01
+#define TRACE
 
 #ifdef TRACE
 #define trace(x) x
@@ -132,40 +133,40 @@ int prot_x (int connfd)
 		err_sys ("(%s) error - fdopen() failed", prog_name);
 	xdrstdio_create(&xdrs_w, stream_socket_w, XDR_ENCODE);
 
-	trace( err_msg("(%s) - waiting for operands ...", prog_name) );
+	while (1) {
+		trace( err_msg("(%s) - waiting for operands ...", prog_name) );
 
-	/* get the operands */
-	if ( ! xdr_int(&xdrs_r, &op1) ) {
-		trace( err_msg("(%s) - cannot read op1 with XDR", prog_name) );		
-	} else {
-		trace( err_msg("(%s) - read op1 = %d", prog_name, op1) );
-	}
-	
-	if ( ! xdr_int(&xdrs_r, &op2) ) {
-		trace( err_msg("(%s) - cannot read op2 with XDR", prog_name) );
-	} else {
-		trace( err_msg("(%s) - read op2 = %d", prog_name, op2) );
-	}
+		/* get the operands */
+		if ( ! xdr_int(&xdrs_r, &op1) ) {
+			trace( err_msg("(%s) - cannot read op1 with XDR", prog_name) );	
+			return 0;	
+		} else {
+			trace( err_msg("(%s) - read op1 = %d", prog_name, op1) );
+		}
+		
+		if ( ! xdr_int(&xdrs_r, &op2) ) {
+			trace( err_msg("(%s) - cannot read op2 with XDR", prog_name) );
+			return 0;
+		} else {
+			trace( err_msg("(%s) - read op2 = %d", prog_name, op2) );
+		}
 
-	/* do the operation */
-	res = op1 + op2;
+		/* do the operation */
+		res = op1 + op2;
+
+		trace( err_msg("(%s) --- result of the sum: %d", prog_name, res) );
+
+		/* send the result */
+		xdr_int(&xdrs_w, &res);
+		fflush(stream_socket_w);
+
+		trace( err_msg("(%s) --- result just sent back", prog_name) );
+	}
 
 	xdr_destroy(&xdrs_r);
-
-	trace( err_msg("(%s) --- result of the sum: %d", prog_name, res) );
-
-	/* send the result */
-	xdr_int(&xdrs_w, &res);
-	fflush(stream_socket_w);
-
 	xdr_destroy(&xdrs_w);
 	fclose(stream_socket_w);
-
-	/* NB: Close read streams only after writing operations have also been done */
 	fclose(stream_socket_r);
-
-
-	trace( err_msg("(%s) --- result just sent back", prog_name) );
 
 	return 0;
 }
