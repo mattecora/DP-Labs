@@ -1,20 +1,18 @@
 #include "errlib.h"
 #include "sockwrap.h"
 
-extern char *prog_name;
-
 int Socket(int family, int type, int protocol)
 {
     int n;
     if ((n = socket(family, type, protocol)) < 0)
-        err_sys("(%s) Error - socket() failed", prog_name);
+        err_sys("Socket() failed");
     return n;
 }
 
 void Bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     if (bind(sockfd, addr, addrlen) != 0)
-        err_sys("(%s) Error - bind() failed", prog_name);
+        err_sys("Bind() failed");
 }
 
 void Listen(int sockfd, int backlog)
@@ -23,7 +21,7 @@ void Listen(int sockfd, int backlog)
     if ((ptr = getenv("LISTENQ")) != NULL)
         backlog = atoi(ptr);
     if (listen(sockfd, backlog) < 0)
-        err_sys("(%s) Error - listen() failed", prog_name);
+        err_sys("Listen() failed");
 }
 
 int Accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlenptr)
@@ -38,7 +36,7 @@ again:
             errno == ENOBUFS || errno == ENOMEM)
             goto again;
         else
-            err_sys("(%s) Error - accept() failed", prog_name);
+            err_sys("Accept() failed");
     }
     return n;
 }
@@ -46,7 +44,7 @@ again:
 void Connect(int sockfd, const struct sockaddr *srvaddr, socklen_t addrlen)
 {
     if (connect(sockfd, srvaddr, addrlen) != 0)
-        err_sys("(%s) Error - connect() failed", prog_name);
+        err_sys("Connect() failed");
 }
 
 int Select(int nfds, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout)
@@ -58,7 +56,7 @@ again:
         if (errno == EINTR)
             goto again;
         else
-            err_sys("(%s) Error - select() failed", prog_name);
+            err_sys("Select() failed");
     }
     return n;
 }
@@ -66,13 +64,13 @@ again:
 void Close(int fd)
 {
     if (close(fd) != 0)
-        err_sys("(%s) Error - close() failed", prog_name);
+        err_sys("Close() failed");
 }
 
 void Shutdown(int fd, int howto)
 {
     if (shutdown(fd, howto) != 0)
-        err_sys("(%s) Error - shutdown() failed", prog_name);
+        err_sys("Shutdown() failed");
 }
 
 ssize_t Read(int fd, void *bufptr, size_t nbytes)
@@ -84,7 +82,7 @@ again:
         if (errno == EINTR)
             goto again;
         else
-            err_sys("(%s) Error - read() failed", prog_name);
+            err_sys("Read() failed");
     }
     return n;
 }
@@ -92,7 +90,7 @@ again:
 ssize_t Write(int fd, const void *bufptr, size_t nbytes)
 {
     if (write(fd, bufptr, nbytes) != nbytes)
-        err_sys("(%s) Error - write() failed", prog_name);
+        err_sys("Write() failed");
     return nbytes;
 }
 
@@ -101,7 +99,7 @@ ssize_t Recv(int fd, void *bufptr, size_t nbytes, int flags)
     ssize_t n;
 
     if ((n = recv(fd, bufptr, nbytes, flags)) < 0)
-        err_sys("(%s) Error - recv() failed", prog_name);
+        err_sys("Recv() failed");
     return n;
 }
 
@@ -110,21 +108,21 @@ ssize_t Recvfrom(int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr
     ssize_t n;
 
     if ((n = recvfrom(fd, bufptr, nbytes, flags, sa, salenptr)) < 0)
-        err_sys("(%s) Error - recvfrom() failed", prog_name);
+        err_sys("Recvfrom() failed");
     return n;
 }
 
 ssize_t Send(int fd, const void *bufptr, size_t nbytes, int flags)
 {
     if (send(fd, bufptr, nbytes, flags) != nbytes)
-        err_sys("(%s) Error - send() failed", prog_name);
+        err_sys("Send() failed");
     return nbytes;
 }
 
 ssize_t Sendto(int fd, const void *bufptr, size_t nbytes, int flags, const struct sockaddr *sa, socklen_t salen)
 {
     if (sendto(fd, bufptr, nbytes, flags, sa, salen) != nbytes)
-        err_sys("(%s) Error - sendto() failed", prog_name);
+        err_sys("Sendto() failed");
     return nbytes;
 }
 
@@ -162,7 +160,7 @@ ssize_t Readn(int fd, void *bufptr, size_t nbytes)
     ssize_t n;
 
     if ((n = readn(fd, bufptr, nbytes)) < 0)
-        err_sys("(%s) Error - readn() failed", prog_name);
+        err_sys("Readn() failed");
     return n;
 }
 
@@ -195,7 +193,7 @@ ssize_t writen(int fd, const void *bufptr, size_t nbytes)
 ssize_t Writen(int fd, const void *bufptr, size_t nbytes)
 {
     if (writen(fd, bufptr, nbytes) != nbytes)
-        err_sys("(%s) Error - writen() failed", prog_name);
+        err_sys("Writen() failed");
     return nbytes;
 }
 
@@ -233,7 +231,7 @@ ssize_t Recvn(int fd, void *bufptr, size_t nbytes, int flags)
     ssize_t n;
 
     if ((n = recvn(fd, bufptr, nbytes, flags)) < 0)
-        err_sys("(%s) Error - readn() failed", prog_name);
+        err_sys("Recvn() failed");
     return n;
 }
 
@@ -266,7 +264,7 @@ ssize_t sendn(int fd, const void *bufptr, size_t nbytes, int flags)
 ssize_t Sendn(int fd, const void *bufptr, size_t nbytes, int flags)
 {
     if (sendn(fd, bufptr, nbytes, flags) != nbytes)
-        err_sys("(%s) Error - writen() failed", prog_name);
+        err_sys("Sendn() failed");
     return nbytes;
 }
 
@@ -303,7 +301,7 @@ ssize_t Readline(int fd, void *bufptr, size_t maxlen)
     ssize_t n;
 
     if ((n = readline(fd, bufptr, maxlen)) < 0)
-        err_sys("(%s) Error - readline() failed", prog_name);
+        err_sys("Readline() failed");
     return n;
 }
 
@@ -340,7 +338,7 @@ ssize_t Recvline(int fd, void *bufptr, size_t maxlen, int flags)
     ssize_t n;
 
     if ((n = recvline(fd, bufptr, maxlen, flags)) < 0)
-        err_sys("(%s) Error - readline() failed", prog_name);
+        err_sys("Recvline() failed");
     return n;
 }
 
@@ -348,39 +346,39 @@ void Inet_pton(int af, const char *strptr, void *addrptr)
 {
     int status = inet_pton(af, strptr, addrptr);
     if (status == 0)
-        err_quit("(%s) Error - inet_pton() failed: Invalid address", prog_name);
+        err_quit("Inet_pton() failed: Invalid address");
     if (status < 0)
-        err_sys("(%s) Error - inet_pton() failed", prog_name);
+        err_sys("Inet_pton() failed");
 }
 
 void Inet_ntop(int af, const void *addrptr, char *strptr, size_t length)
 {
     if (inet_ntop(af, addrptr, strptr, length) == NULL)
-        err_sys("(%s) Error - inet_ntop() failed", prog_name);
+        err_sys("Inet_ntop() failed");
 }
 
 void Getsockname(int sockfd, struct sockaddr *localaddr, socklen_t *addrp)
 {
     if ((getsockname(sockfd, localaddr, addrp)) != 0)
-        err_quit("(%s) Error - getsockname() failed", prog_name);
+        err_quit("Getsockname() failed");
 }
 
 void Getpeername(int fd, struct sockaddr *sa, socklen_t *salenptr)
 {
     if (getpeername(fd, sa, salenptr) < 0)
-        err_sys("(%s) Error - getpeername() failed");
+        err_sys("Getpeername() failed");
 }
 
 void Getsockopt(int fd, int level, int optname, void *optval, socklen_t *optlenptr)
 {
     if (getsockopt(fd, level, optname, optval, optlenptr) < 0)
-        err_sys("(%s) Error - getsockopt() failed");
+        err_sys("Getsockopt() failed");
 }
 
 void Setsockopt(int fd, int level, int optname, const void *optval, socklen_t optlen)
 {
     if (setsockopt(fd, level, optname, optval, optlen) < 0)
-        err_sys("(%s) Error - setsockopt() failed");
+        err_sys("Setsockopt() failed");
 }
 
 void Getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)
@@ -389,5 +387,5 @@ void Getaddrinfo(const char *node, const char *service, const struct addrinfo *h
 
     err_code = getaddrinfo(node, service, hints, res);
     if (err_code != 0)
-        err_quit("(%s) Error - getaddrinfo() failed: %s", prog_name, gai_strerror(err_code));
+        err_quit("Getaddrinfo() failed: %s", gai_strerror(err_code));
 }
