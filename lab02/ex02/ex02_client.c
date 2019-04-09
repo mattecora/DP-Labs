@@ -32,7 +32,10 @@ int main(int argc, char const *argv[])
 
     /* Check input parameters */
     if (argc < 3)
-        err_quit("(%s) Error - Not enough input parameters.", prog_name);
+    {
+        fprintf(stderr, "(%s) Error - Not enough input parameters.", prog_name);
+        return -1;
+    }
 
     /* Clear the memory and set address family */
     memset(&addr, 0, sizeof(addr));
