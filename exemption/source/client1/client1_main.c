@@ -1,12 +1,10 @@
 /******************************************************************************
- * Lab 02 - Exercise 3 (client)                                               *
+ * client1_main.c : TCP client for exercise 2.3                               *
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
