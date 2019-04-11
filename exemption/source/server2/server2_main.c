@@ -85,6 +85,9 @@ int main(int argc, char const *argv[])
             info_msg("Connection established with %s:%hu",
                 inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
+            /* Close the listening socket */
+            Close(list_sock);
+
             /* Handle requests from the client */
             while (handle_request(conn_sock));
 
@@ -98,6 +101,9 @@ int main(int argc, char const *argv[])
 
             return 0;
         }
+
+        /* Close the connected socket */
+        Close(conn_sock);
     }
 
     return 0;
