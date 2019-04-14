@@ -88,8 +88,8 @@ int main(int argc, char const *argv[])
             /* Close the listening socket */
             Close(list_sock);
 
-            /* Handle requests from the client */
-            while (handle_request(conn_sock));
+            /* Answer to client requests */
+            while (run_server(conn_sock));
 
             /* Close the connected socket */
             Close(conn_sock);

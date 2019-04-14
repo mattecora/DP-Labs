@@ -42,15 +42,9 @@ int main(int argc, char const *argv[])
 	/* Loop through the arguments */
 	for (i = 3; i < argc; i++)
 	{
-		/* Send a request for the file */
-		send_request(sock, argv[i]);
-
-		/* Receive the response */
-		if (recv_response(sock, argv[i]) == 0)
-		{
-			/* There was an error, close the connection */
+		/* Handle a request and, in case of error, break */
+		if (run_client(sock, argv[i]) == 0)
 			break;
-		}
 	}
 
 	/* Close the socket */

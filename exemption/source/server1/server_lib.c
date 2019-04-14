@@ -26,36 +26,86 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
     addr->sin_port = htons(atoi(port));
 }
 
-int parse_request(char *request, char *filename)
+int select_for_read(int sock, int timeout)
 {
-    /* Check that line starts with GET */
-    if (strncmp(request, "GET ", strlen("GET ")) != 0)
+    fd_set readfds;
+    struct timeval select_timeout;
+
+    /* Setup structures for select */
+    FD_ZERO(&readfds);
+    FD_SET(sock, &readfds);
+    select_timeout.tv_usec = 0;
+    select_timeout.tv_sec = timeout;
+
+    /* Perform a select */
+    return (select(sock + 1, &readfds, NULL, NULL, &select_timeout) > 0);
+}
+
+int check_request(char *request, char *filename)
+{
+    char cmp_buffer[MAXLEN];
+
+    /* Try to read the filename */
+    if (sscanf(request, REQ_FMT, filename) != 1)
         return 0;
 
-    /* Advance pointer */
-    request += strlen("GET ");
-
-    /* Try to read the requested filename */
-    if (sscanf(request, "%s", filename) != 1)
+    /* Check request format (additional spaces, incorrect termination...) */
+    sprintf(cmp_buffer, REQ_FMT, filename);
+    if (strncmp(request, cmp_buffer, strlen(cmp_buffer)) != 0)
         return 0;
+    
+    return 1;
+}
 
-    /* Advance pointer */
-    request += strlen(filename);
+int parse_request(int conn_sock, char *filename)
+{
+    char buffer[MAXLEN];
 
-    /* Check that line is terminated */
-    if (strncmp(request, "\r\n", strlen("\r\n")) != 0)
+    /* Wait the socket to be ready */
+    if (select_for_read(conn_sock, TIMEOUT) == 0)
+    {
+        /* Client timeout */
+        err_msg("Client timed out");
         return 0;
+    }
 
-    /* Everything ok */
+    /* Read client request */
+    if (recv(conn_sock, buffer, MAXLEN, 0) <= 0)
+    {
+        /* Connection has been closed by the client */
+        info_msg("Client has closed the connection");
+        return 0;
+    }
+
+    /* Check request format */
+    if (check_request(buffer, filename) == 0)
+    {
+        /* Request format is not valid */
+        send_error(conn_sock);
+        err_msg("Invalid request format");
+        return 0;
+    }
+
+    /* Check that file exists */
+    if (access(filename, F_OK) != 0)
+    {
+        /* File does not exist */
+        send_error(conn_sock);
+        err_msg("Requested file does not exist");
+        return 0;
+    }
+
     return 1;
 }
 
 int send_file(int conn_sock, char *filename)
 {
     int n, fd;
-    uint32_t len, len_n, mtime, mtime_n, left;
+    char buffer[MAXLEN], mtime_pretty[MAXLEN];
+    off_t len;
+    time_t mtime;
+    uint32_t len_n, mtime_n, left;
     struct stat file_stat;
-    char buffer[MAXLEN];
 
     /* Open the file */
     fd = open(filename, O_RDONLY);
@@ -69,10 +119,15 @@ int send_file(int conn_sock, char *filename)
     len = file_stat.st_size;
     mtime = file_stat.st_mtime;
 
+    /* Get mtime string representation */
+    strftime(mtime_pretty, MAXLEN, "%c", localtime(&mtime));
+
+    info_msg("File requested: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
+
     /* Send the ok message */
     if (sendn(conn_sock, MSG_OK, strlen(MSG_OK) * sizeof(char), MSG_NOSIGNAL) < 0)
         return 0;
-    
+
     /* Send the length */
     len_n = htonl(len);
     if (sendn(conn_sock, &len_n, sizeof(uint32_t), MSG_NOSIGNAL) < 0)
@@ -82,7 +137,7 @@ int send_file(int conn_sock, char *filename)
     left = len;
     while (left != 0)
     {
-        /* Decide how many bytes to read, left or at least MAXLEN */
+        /* Decide how many bytes to read, left or at most MAXLEN */
         n = (left > MAXLEN) ? MAXLEN : left;
 
         /* Read file to buffer */
@@ -97,7 +152,7 @@ int send_file(int conn_sock, char *filename)
         left = left - n;
 
         info_msg("Progress: %d of %d bytes sent (%d%%)",
-               len - left, len, (len - left) * 100 / len);
+                 len - left, len, (len - left) * 100 / len);
     }
 
     /* Send the mtime */
@@ -105,7 +160,7 @@ int send_file(int conn_sock, char *filename)
     if (sendn(conn_sock, &mtime_n, sizeof(uint32_t), MSG_NOSIGNAL) < 0)
         return 0;
 
-    info_msg("File sent: %s (len: %d, mtime: %d)", filename, len, mtime);
+    info_msg("File sent: %s", filename);
 
     /* Close the file */
     close(fd);
@@ -119,51 +174,13 @@ int send_error(int conn_sock)
     return (sendn(conn_sock, MSG_ERR, strlen(MSG_ERR) * sizeof(char), MSG_NOSIGNAL) > 0);
 }
 
-int handle_request(int conn_sock)
+int run_server(int conn_sock)
 {
-    char request[MAXLEN], filename[MAXLEN];
-    fd_set readfds;
-    struct timeval select_timeout;
+    char filename[MAXLEN];
 
-    /* Setup structures for select */
-    FD_ZERO(&readfds);
-    FD_SET(conn_sock, &readfds);
-    select_timeout.tv_sec = TIMEOUT;
-    select_timeout.tv_usec = 0;
-
-    /* Wait the socket to be ready */
-    if (select(conn_sock + 1, &readfds, NULL, NULL, &select_timeout) <= 0)
-    {
-        /* Client timeout */
-        err_msg("Client timed out");
+    /* Parse incoming request */
+    if (parse_request(conn_sock, filename) == 0)
         return 0;
-    }
-
-    /* Read client request */
-    if (readline(conn_sock, request, MAXLEN) <= 0)
-    {
-        /* Connection has been closed by the client */
-        info_msg("Client has closed the connection");
-        return 0;
-    }
-
-    /* Check correctness of the request */
-    if (parse_request(request, filename) == 0)
-    {
-        /* Client sent a wrong request */
-        err_msg("Invalid request received");
-        send_error(conn_sock);
-        return 0;
-    }
-
-    /* Check that file exists */
-    if (access(filename, F_OK) != 0)
-    {
-        /* File does not exist */
-        err_msg("Requested file does not exist");
-        send_error(conn_sock);
-        return 0;
-    }
 
     /* Send the file */
     if (send_file(conn_sock, filename) == 0)

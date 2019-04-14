@@ -26,24 +26,8 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
     addr->sin_port = htons(atoi(port));
 }
 
-void send_request(int sock, const char *filename)
+int select_for_read(int sock, int timeout)
 {
-    char buffer[MAXLEN];
-
-    /* Prepare message to be sent */
-    sprintf(buffer, "GET %s\r\n", filename);
-
-    /* Send the request */
-    Sendn(sock, buffer, strlen(buffer) * sizeof(char), 0);
-
-    info_msg("File requested: %s", filename);
-}
-
-int recv_response(int sock, const char *filename)
-{
-    int n, fd;
-    char buffer[MAXLEN];
-    uint32_t len, len_n, mtime, mtime_n, left;
     fd_set readfds;
     struct timeval select_timeout;
 
@@ -51,10 +35,31 @@ int recv_response(int sock, const char *filename)
     FD_ZERO(&readfds);
     FD_SET(sock, &readfds);
     select_timeout.tv_usec = 0;
+    select_timeout.tv_sec = timeout;
 
-    /* Wait the socket to be ready */
-    select_timeout.tv_sec = TIMEOUT;
-    if (Select(sock + 1, &readfds, NULL, NULL, &select_timeout) <= 0)
+    /* Perform a select */
+    return (Select(sock + 1, &readfds, NULL, NULL, &select_timeout) > 0);
+}
+
+void send_request(int sock, const char *filename)
+{
+    char buffer[MAXLEN];
+
+    /* Prepare message to be sent */
+    sprintf(buffer, REQ_FMT, filename);
+
+    /* Send the request */
+    Sendn(sock, buffer, strlen(buffer) * sizeof(char), 0);
+
+    info_msg("File requested: %s", filename);
+}
+
+int parse_response(int sock)
+{
+    char buffer[MAXLEN];
+
+    /* Wait for the socket to be ready */
+    if (select_for_read(sock, TIMEOUT) == 0)
     {
         err_msg("Server timed out");
         return 0;
@@ -63,7 +68,7 @@ int recv_response(int sock, const char *filename)
     /* Read the first line */
     Readline(sock, buffer, MAXLEN);
 
-    /* Check the first line */
+    /* Check the response */
     if (strncmp(buffer, MSG_ERR, strlen(MSG_ERR)) == 0)
     {
         /* Error response */
@@ -76,10 +81,22 @@ int recv_response(int sock, const char *filename)
         err_msg("Response received: unknown");
         return 0;
     }
-    info_msg("Response received: ok");
 
-    /* Open the file in write mode */
-    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC);
+    /* OK response */
+    info_msg("Response received: ok");
+    return 1;
+}
+
+int recv_file(int sock, const char *filename)
+{
+    int n, fd;
+    char buffer[MAXLEN], mtime_pretty[MAXLEN];
+    off_t len;
+    time_t mtime;
+    uint32_t len_n, mtime_n, left;
+    
+    /* Open the file in write mode, or create it */
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
     {
         /* File cannot be opened */
@@ -88,8 +105,7 @@ int recv_response(int sock, const char *filename)
     }
 
     /* Wait the socket to be ready */
-    select_timeout.tv_sec = TIMEOUT;
-    if (Select(sock + 1, &readfds, NULL, NULL, &select_timeout) <= 0)
+    if (select_for_read(sock, TIMEOUT) == 0)
     {
         err_msg("Server timed out");
         return 0;
@@ -104,12 +120,11 @@ int recv_response(int sock, const char *filename)
     left = len;
     while (left != 0)
     {
-        /* Decide how many bytes to read, left or at least MAXLEN */
+        /* Decide how many bytes to read, left or at most MAXLEN */
         n = (left > MAXLEN) ? MAXLEN : left;
 
         /* Wait the socket to be ready */
-        select_timeout.tv_sec = TIMEOUT;
-        if (Select(sock + 1, &readfds, NULL, NULL, &select_timeout) <= 0)
+        if (select_for_read(sock, TIMEOUT) == 0)
         {
             err_msg("Server timed out");
             return 0;
@@ -128,8 +143,7 @@ int recv_response(int sock, const char *filename)
     }
 
     /* Wait the socket to be ready */
-    select_timeout.tv_sec = TIMEOUT;
-    if (Select(sock + 1, &readfds, NULL, NULL, &select_timeout) <= 0)
+    if (select_for_read(sock, TIMEOUT) == 0)
     {
         err_msg("Server timed out");
         return 0;
@@ -138,12 +152,31 @@ int recv_response(int sock, const char *filename)
     /* Read the mtime */
     Recvn(sock, &mtime_n, sizeof(uint32_t), 0);
     mtime = ntohl(mtime_n);
-    info_msg("Last modification time of the file: %d", mtime);
 
-    info_msg("File transfer completed: %s (len: %d, mtime: %d)", filename, len, mtime);
+    /* Pretty-print the mtime */
+    strftime(mtime_pretty, MAXLEN, "%c", localtime(&mtime));
+    info_msg("Last modification time of the file: %s", mtime_pretty);
+
+    info_msg("File received: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
 
     /* Close the file */
     Close(fd);
 
     return 1;
+}
+
+int run_client(int sock, const char *filename)
+{
+    /* Send a request for the file */
+    send_request(sock, filename);
+
+    /* Check the response */
+    if (parse_response(sock) != 0)
+    {
+        /* Receive the file */
+        return recv_file(sock, filename);
+    }
+
+    /* An error has occurred */
+    return 0;
 }

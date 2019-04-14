@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -25,6 +26,7 @@
 #define MAXLEN  4096
 #define MSG_OK  "+OK\r\n"
 #define MSG_ERR "-ERR\r\n"
+#define REQ_FMT "GET %s\r\n"
 
 extern const char *prog_name;
 
@@ -40,6 +42,17 @@ extern const char *prog_name;
 void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr);
 
 /* 
+ * Description: Performs a select on the given socket waiting for it to be
+ *              ready for reading.
+ * 
+ * Parameters:  - the socket to wait for (int)
+ *              - the maximum timeout before aborting (int)
+ * 
+ * Returns:     1 in case the socket was ready before timeout, 0 otherwise
+ */
+int select_for_read(int sock, int timeout);
+
+/* 
  * Description: Checks the correctness of a given request and possibly returns
  *              the requested filename.
  * 
@@ -48,7 +61,18 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr);
  * 
  * Returns:     0 in case of wrong request, 1 in case of correct request
  */
-int parse_request(char *request, char *filename);
+int check_request(char *request, char *filename);
+
+/* 
+ * Description: Reads a request from the given socket and returns the requested
+ *              filename in the given buffer.
+ * 
+ * Parameters:  - the connected socket from which the request is coming (int)
+ *              - the location where the filename will be stored (char*)
+ * 
+ * Returns:     0 in case of wrong request, 1 in case of correct request
+ */
+int parse_request(int conn_sock, char *filename);
 
 /* 
  * Description: Sends a file according to the described protocol.
@@ -70,12 +94,13 @@ int send_file(int conn_sock, char *filename);
 int send_error(int conn_sock);
 
 /* 
- * Description: Handles a request coming from the given connected socket.
+ * Description: Controls the interaction with a client, given the socket to
+ *              which the client is connected.
  * 
- * Parameters:  - the connected socket from which the request is coming
+ * Parameters:  - the connected socket of the client to interact with (int)
  * 
  * Returns:     1 in case a request has been handled, 0 otherwise
  */
-int handle_request(int conn_sock);
+int run_server(int conn_sock);
 
 #endif
