@@ -18,7 +18,7 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
         addr->sin_addr.s_addr = INADDR_ANY;
     else
     {
-        Inet_pton(AF_INET, ip, &ip_struct);
+        Inet_ptonQ(AF_INET, ip, &ip_struct);
         addr->sin_addr = ip_struct;
     }
 
@@ -38,7 +38,7 @@ int select_for_read(int sock, int timeout)
     select_timeout.tv_sec = timeout;
 
     /* Perform a select */
-    return (Select(sock + 1, &readfds, NULL, NULL, &select_timeout) > 0);
+    return (SelectQ(sock + 1, &readfds, NULL, NULL, &select_timeout) > 0);
 }
 
 void send_request(int sock, const char *filename)
@@ -49,7 +49,7 @@ void send_request(int sock, const char *filename)
     sprintf(buffer, REQ_FMT, filename);
 
     /* Send the request */
-    Sendn(sock, buffer, strlen(buffer) * sizeof(char), 0);
+    SendnQ(sock, buffer, strlen(buffer) * sizeof(char), 0);
 
     info_msg("File requested: %s", filename);
 }
@@ -66,7 +66,7 @@ int parse_response(int sock)
     }
 
     /* Read the first line */
-    Readline(sock, buffer, MAXLEN);
+    ReadlineQ(sock, buffer, MAXLEN);
 
     /* Check the response */
     if (strncmp(buffer, MSG_ERR, strlen(MSG_ERR)) == 0)
@@ -112,7 +112,7 @@ int recv_file(int sock, const char *filename)
     }
 
     /* Read the length */
-    Recvn(sock, &len_n, sizeof(uint32_t), 0);
+    RecvnQ(sock, &len_n, sizeof(uint32_t), 0);
     len = ntohl(len_n);
     info_msg("Length of the file: %d bytes", len);
 
@@ -131,10 +131,10 @@ int recv_file(int sock, const char *filename)
         }
 
         /* Read socket to buffer */
-        Recvn(sock, buffer, n, 0);
+        RecvnQ(sock, buffer, n, 0);
 
         /* Write buffer to file */
-        Writen(fd, buffer, n);
+        WritenQ(fd, buffer, n);
 
         /* Update left */
         left = left - n;
@@ -150,7 +150,7 @@ int recv_file(int sock, const char *filename)
     }
 
     /* Read the mtime */
-    Recvn(sock, &mtime_n, sizeof(uint32_t), 0);
+    RecvnQ(sock, &mtime_n, sizeof(uint32_t), 0);
     mtime = ntohl(mtime_n);
 
     /* Pretty-print the mtime */
@@ -160,7 +160,7 @@ int recv_file(int sock, const char *filename)
     info_msg("File received: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
 
     /* Close the file */
-    Close(fd);
+    CloseQ(fd);
 
     return 1;
 }

@@ -27,7 +27,7 @@ void signal_handler(int sig)
     if (sig == SIGINT)
     {
         /* Close the socket and terminate */
-        Close(list_sock);
+        CloseQ(list_sock);
         info_msg("Server stopped");
         exit(0);
     }
@@ -54,13 +54,13 @@ int main(int argc, char const *argv[])
     addr_setup(NULL, argv[1], &server_addr);
 
     /* Open the socket */
-    list_sock = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    list_sock = SocketQ(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
     /* Bind the socket */
-    Bind(list_sock, (struct sockaddr*) &server_addr, sizeof(server_addr));
+    BindQ(list_sock, (struct sockaddr*) &server_addr, sizeof(server_addr));
 
     /* Start listening on the socket */
-    Listen(list_sock, BACKLOG);
+    ListenQ(list_sock, BACKLOG);
     info_msg("Server started on port %s", argv[1]);
 
     /* Setup the handler for SIGINT and SIGCHLD */
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
         info_msg("Father process waiting for connection");
 
         /* Accept a connection from a client */
-        conn_sock = Accept(list_sock, (struct sockaddr*) &client_addr, &client_addr_len);
+        conn_sock = AcceptR(list_sock, (struct sockaddr*) &client_addr, &client_addr_len);
 
         /* Fork and handle requests in the child process */
         if (fork() == 0)
@@ -86,13 +86,13 @@ int main(int argc, char const *argv[])
                 inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
             /* Close the listening socket */
-            Close(list_sock);
+            CloseR(list_sock);
 
             /* Answer to client requests */
             while (run_server(conn_sock));
 
             /* Close the connected socket */
-            Close(conn_sock);
+            CloseR(conn_sock);
 
             info_msg("Connection closed with %s:%hu",
                 inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
@@ -103,7 +103,7 @@ int main(int argc, char const *argv[])
         }
 
         /* Close the connected socket */
-        Close(conn_sock);
+        CloseR(conn_sock);
     }
 
     return 0;

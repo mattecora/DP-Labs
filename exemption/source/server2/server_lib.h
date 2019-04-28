@@ -53,6 +53,16 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr);
 int select_for_read(int sock, int timeout);
 
 /* 
+ * Description: Reads a request from the given socket in the given buffer.
+ * 
+ * Parameters:  - the connected socket from which the request is coming (int)
+ *              - the location where the request will be stored (char*)
+ * 
+ * Returns:     0 in case of wrong request, 1 in case of correct request
+ */
+int read_request(int conn_sock, char *buffer);
+
+/* 
  * Description: Checks the correctness of a given request and possibly returns
  *              the requested filename.
  * 
@@ -62,17 +72,6 @@ int select_for_read(int sock, int timeout);
  * Returns:     0 in case of wrong request, 1 in case of correct request
  */
 int check_request(char *request, char *filename);
-
-/* 
- * Description: Reads a request from the given socket and returns the requested
- *              filename in the given buffer.
- * 
- * Parameters:  - the connected socket from which the request is coming (int)
- *              - the location where the filename will be stored (char*)
- * 
- * Returns:     0 in case of wrong request, 1 in case of correct request
- */
-int parse_request(int conn_sock, char *filename);
 
 /* 
  * Description: Sends a file according to the described protocol.
