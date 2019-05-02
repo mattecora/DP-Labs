@@ -5,6 +5,16 @@
 
 #include "server_lib.h"
 
+#define CHECK_TIMEOUT(sock, mode, op) \
+    ({\
+        if (select_socket(sock, TIMEOUT, mode) == 0)\
+        {\
+            err_msg("Socket timed out");\
+            return 0;\
+        }\
+        op;\
+    })
+
 void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
 {
     struct in_addr ip_struct;
@@ -26,33 +36,27 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
     addr->sin_port = htons(atoi(port));
 }
 
-int select_for_read(int sock, int timeout)
+int select_socket(int sock, int timeout, int mode)
 {
-    fd_set readfds;
+    fd_set fds;
     struct timeval select_timeout;
 
     /* Setup structures for select */
-    FD_ZERO(&readfds);
-    FD_SET(sock, &readfds);
+    FD_ZERO(&fds);
+    FD_SET(sock, &fds);
     select_timeout.tv_usec = 0;
     select_timeout.tv_sec = timeout;
 
     /* Perform a select */
-    return (SelectR(sock + 1, &readfds, NULL, NULL, &select_timeout) > 0);
+    if (mode == SELECT_RD)
+        return (SelectR(sock + 1, &fds, NULL, NULL, &select_timeout) > 0);
+    return (SelectR(sock + 1, NULL, &fds, NULL, &select_timeout) > 0);
 }
 
 int read_request(int conn_sock, char *buffer)
 {
-    /* Wait the socket to be ready */
-    if (select_for_read(conn_sock, TIMEOUT) == 0)
-    {
-        /* Client timeout */
-        err_msg("Client timed out");
-        return 0;
-    }
-
     /* Read client request */
-    if (RecvR(conn_sock, buffer, MAXLEN, 0) == 0)
+    if (CHECK_TIMEOUT(conn_sock, SELECT_RD, RecvR(conn_sock, buffer, MAXLEN, 0)) == 0)
     {
         /* No data, client has closed the connection */
         info_msg("Client has closed the connection");
@@ -121,12 +125,14 @@ int send_file(int conn_sock, char *filename)
     info_msg("File requested: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
 
     /* Send the ok message */
-    if (SendnR(conn_sock, MSG_OK, strlen(MSG_OK) * sizeof(char), MSG_NOSIGNAL) < 0)
+    if (CHECK_TIMEOUT(conn_sock, SELECT_WR, 
+        SendnR(conn_sock, MSG_OK, strlen(MSG_OK) * sizeof(char), MSG_NOSIGNAL)) < 0)
         return 0;
 
     /* Send the length */
     len_n = htonl(len);
-    if (SendnR(conn_sock, &len_n, sizeof(uint32_t), MSG_NOSIGNAL) < 0)
+    if (CHECK_TIMEOUT(conn_sock, SELECT_WR, 
+        SendnR(conn_sock, &len_n, sizeof(uint32_t), MSG_NOSIGNAL)) < 0)
         return 0;
 
     /* Send the file */
@@ -137,11 +143,11 @@ int send_file(int conn_sock, char *filename)
         n = (left > MAXLEN) ? MAXLEN : left;
 
         /* Read file to buffer */
-        if (ReadnR(fd, buffer, MAXLEN) < 0)
+        if (CHECK_TIMEOUT(fd, SELECT_RD, ReadnR(fd, buffer, MAXLEN)) < 0)
             return 0;
 
         /* Write buffer to socket */
-        if (SendnR(conn_sock, buffer, n, MSG_NOSIGNAL) < 0)
+        if (CHECK_TIMEOUT(conn_sock, SELECT_WR, SendnR(conn_sock, buffer, n, MSG_NOSIGNAL)) < 0)
             return 0;
 
         /* Update left */
@@ -153,7 +159,8 @@ int send_file(int conn_sock, char *filename)
 
     /* Send the mtime */
     mtime_n = htonl(mtime);
-    if (SendnR(conn_sock, &mtime_n, sizeof(uint32_t), MSG_NOSIGNAL) < 0)
+    if (CHECK_TIMEOUT(conn_sock, SELECT_WR, 
+        SendnR(conn_sock, &mtime_n, sizeof(uint32_t), MSG_NOSIGNAL)) < 0)
         return 0;
 
     info_msg("File sent: %s", filename);
@@ -167,7 +174,7 @@ int send_file(int conn_sock, char *filename)
 int send_error(int conn_sock)
 {
     /* Send error message */
-    return (SendnR(conn_sock, MSG_ERR, strlen(MSG_ERR) * sizeof(char), MSG_NOSIGNAL) > 0);
+    return (CHECK_TIMEOUT(conn_sock, SELECT_WR, SendnR(conn_sock, MSG_ERR, strlen(MSG_ERR) * sizeof(char), MSG_NOSIGNAL)) > 0);
 }
 
 int run_server(int conn_sock)

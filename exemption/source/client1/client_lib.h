@@ -28,6 +28,9 @@
 #define MSG_ERR "-ERR\r\n"
 #define REQ_FMT "GET %s\r\n"
 
+#define SELECT_RD 0
+#define SELECT_WR 1
+
 extern const char *prog_name;
 
 /* 
@@ -43,14 +46,15 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr);
 
 /* 
  * Description: Performs a select on the given socket waiting for it to be
- *              ready for reading.
+ *              ready for reading or writing.
  * 
  * Parameters:  - the socket to wait for (int)
  *              - the maximum timeout before aborting (int)
+ *              - the mode of the operation (O_RD or O_WR, int)
  * 
  * Returns:     1 in case the socket was ready before timeout, 0 otherwise
  */
-int select_for_read(int sock, int timeout);
+int select_socket(int sock, int timeout, int mode);
 
 /* 
  * Description: Sends a request for the given filename to the given socket.
@@ -58,9 +62,9 @@ int select_for_read(int sock, int timeout);
  * Parameters:  - the connected socket to which the request is sent (int)
  *              - the name of the file to be requested (char*)
  * 
- * Returns:     nothing
+ * Returns:     1 in case of success, 0 otherwise
  */
-void send_request(int sock, const char *filename);
+int send_request(int sock, const char *filename);
 
 /* 
  * Description: Reads and parses a response from the given socket.

@@ -5,6 +5,16 @@
 
 #include "client_lib.h"
 
+#define CHECK_TIMEOUT(sock, mode, op) \
+    ({\
+        if (select_socket(sock, TIMEOUT, mode) == 0)\
+        {\
+            err_msg("Socket timed out");\
+            return 0;\
+        }\
+        op;\
+    })
+
 void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
 {
     struct in_addr ip_struct;
@@ -26,22 +36,24 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
     addr->sin_port = htons(atoi(port));
 }
 
-int select_for_read(int sock, int timeout)
+int select_socket(int sock, int timeout, int mode)
 {
-    fd_set readfds;
+    fd_set fds;
     struct timeval select_timeout;
 
     /* Setup structures for select */
-    FD_ZERO(&readfds);
-    FD_SET(sock, &readfds);
+    FD_ZERO(&fds);
+    FD_SET(sock, &fds);
     select_timeout.tv_usec = 0;
     select_timeout.tv_sec = timeout;
 
     /* Perform a select */
-    return (SelectQ(sock + 1, &readfds, NULL, NULL, &select_timeout) > 0);
+    if (mode == SELECT_RD)
+        return (SelectQ(sock + 1, &fds, NULL, NULL, &select_timeout) > 0);
+    return (SelectQ(sock + 1, NULL, &fds, NULL, &select_timeout) > 0);
 }
 
-void send_request(int sock, const char *filename)
+int send_request(int sock, const char *filename)
 {
     char buffer[MAXLEN];
 
@@ -49,36 +61,24 @@ void send_request(int sock, const char *filename)
     sprintf(buffer, REQ_FMT, filename);
 
     /* Send the request */
-    SendnQ(sock, buffer, strlen(buffer) * sizeof(char), 0);
+    CHECK_TIMEOUT(sock, SELECT_WR, SendnQ(sock, buffer, strlen(buffer) * sizeof(char), 0));
 
     info_msg("File requested: %s", filename);
+    return 1;
 }
 
 int parse_response(int sock)
 {
     char buffer[MAXLEN];
 
-    /* Wait for the socket to be ready */
-    if (select_for_read(sock, TIMEOUT) == 0)
-    {
-        err_msg("Server timed out");
-        return 0;
-    }
+    /* Read the first line with OK format */
+    CHECK_TIMEOUT(sock, SELECT_RD, RecvQ(sock, buffer, strlen(MSG_OK), 0));
 
-    /* Read the first line */
-    ReadlineQ(sock, buffer, MAXLEN);
-
-    /* Check the response */
-    if (strncmp(buffer, MSG_ERR, strlen(MSG_ERR)) == 0)
+    /* Check the first line */
+    if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
     {
-        /* Error response */
-        err_msg("Response received: error");
-        return 0;
-    }
-    else if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
-    {
-        /* Unknown response */
-        err_msg("Response received: unknown");
+        /* Error or unknown response */
+        err_msg("Response received: error or unknown");
         return 0;
     }
 
@@ -104,15 +104,8 @@ int recv_file(int sock, const char *filename)
         return 0;
     }
 
-    /* Wait the socket to be ready */
-    if (select_for_read(sock, TIMEOUT) == 0)
-    {
-        err_msg("Server timed out");
-        return 0;
-    }
-
     /* Read the length */
-    RecvnQ(sock, &len_n, sizeof(uint32_t), 0);
+    CHECK_TIMEOUT(sock, SELECT_RD, RecvnQ(sock, &len_n, sizeof(uint32_t), 0));
     len = ntohl(len_n);
     info_msg("Length of the file: %d bytes", len);
 
@@ -123,18 +116,11 @@ int recv_file(int sock, const char *filename)
         /* Decide how many bytes to read, left or at most MAXLEN */
         n = (left > MAXLEN) ? MAXLEN : left;
 
-        /* Wait the socket to be ready */
-        if (select_for_read(sock, TIMEOUT) == 0)
-        {
-            err_msg("Server timed out");
-            return 0;
-        }
-
         /* Read socket to buffer */
-        RecvnQ(sock, buffer, n, 0);
+        CHECK_TIMEOUT(sock, SELECT_RD, RecvnQ(sock, buffer, n, 0));
 
         /* Write buffer to file */
-        WritenQ(fd, buffer, n);
+        CHECK_TIMEOUT(fd, SELECT_WR, WritenQ(fd, buffer, n));
 
         /* Update left */
         left = left - n;
@@ -142,15 +128,8 @@ int recv_file(int sock, const char *filename)
         info_msg("Progress: %d of %d bytes received (%d%%)", len - left, len, (len - left)*100/len);
     }
 
-    /* Wait the socket to be ready */
-    if (select_for_read(sock, TIMEOUT) == 0)
-    {
-        err_msg("Server timed out");
-        return 0;
-    }
-
     /* Read the mtime */
-    RecvnQ(sock, &mtime_n, sizeof(uint32_t), 0);
+    CHECK_TIMEOUT(sock, SELECT_RD, RecvnQ(sock, &mtime_n, sizeof(uint32_t), 0));
     mtime = ntohl(mtime_n);
 
     /* Pretty-print the mtime */
