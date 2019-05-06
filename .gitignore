@@ -5,3 +5,7 @@
 !*.h
 !*.xdr
 !*.pdf
+!*.htm
+!*.css
+!*.js
+!*.php

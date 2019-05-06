@@ -1,0 +1,45 @@
+body {
+    text-align: center;
+    background-color: #EEEEEE;
+}
+
+#myheader {
+    border: 1px solid red;
+    padding: 10px 0px;
+}
+
+#mynav {
+    padding: 10px 0px;
+}
+
+#mycontainer {
+    max-width: 1024px;
+    margin: auto;
+    background-color: #FFFFFF;
+    overflow: hidden;
+}
+
+#left {
+    float: left;
+    width: 70%;
+}
+
+#myarticle {
+    padding: 10px 0px;
+}
+
+#mysection {
+    padding: 10px 0px;
+}
+
+#myaside {
+    float: right;
+    width: 30%;
+    padding: 10px 0px;
+}
+
+#myfooter {
+    clear: both;
+    border: 1px solid blue;
+    padding: 10px 0px;
+}
