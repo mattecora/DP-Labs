@@ -32,10 +32,10 @@ int main(int argc, char const *argv[])
     addr_setup(argv[1], argv[2], &server_addr);
 
 	/* Open the socket */
-    sock = SocketQ(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    sock = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP, ERR_QUIT);
 
 	/* Connect the socket */
-	ConnectQ(sock, (struct sockaddr*) &server_addr, sizeof(server_addr));
+	Connect(sock, (struct sockaddr*) &server_addr, sizeof(server_addr), ERR_QUIT);
 	
 	info_msg("Connection established with %s:%s", argv[1], argv[2]);
 
@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
 	}
 
 	/* Close the socket */
-	CloseQ(sock);
+	Close(sock, ERR_QUIT);
 
 	info_msg("Connection closed with %s:%s", argv[1], argv[2]);
 

@@ -13,7 +13,6 @@
 
 #include    <arpa/inet.h>
 #include    <errno.h>
-#include    <fcntl.h>
 #include    <netdb.h>
 #include    <netinet/in.h>
 #include    <sys/socket.h>
@@ -21,87 +20,56 @@
 #include    <sys/types.h>
 #include    <unistd.h>
 
+/* -------- Error behaviors ------------------------------------------------- */
+
+#define     ERR_RET     0
+#define     ERR_QUIT    1
+
 /* -------- Socket management functions ------------------------------------- */
 
-int         SocketQ     (int family, int type, int protocol);
-void        BindQ       (int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-void        ListenQ     (int sockfd, int backlog);
-int         AcceptQ     (int sockfd, struct sockaddr *cliaddr, socklen_t *addrlenptr);
-void        ConnectQ    (int sockfd, const struct sockaddr *srvaddr, socklen_t addrlen);
-int         SelectQ     (int nfds, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
-void        CloseQ      (int sockfd);
-void        ShutdownQ   (int sockfd, int howto);
-
-int         SocketR     (int family, int type, int protocol);
-int         BindR       (int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-int         ListenR     (int sockfd, int backlog);
-int         AcceptR     (int sockfd, struct sockaddr *cliaddr, socklen_t *addrlenptr);
-int         ConnectR    (int sockfd, const struct sockaddr *srvaddr, socklen_t addrlen);
-int         SelectR     (int nfds, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
-int         CloseR      (int sockfd);
-int         ShutdownR   (int sockfd, int howto);
+int         Socket      (int family, int type, int protocol, int errmode);
+int         Bind        (int sockfd, const struct sockaddr *addr, socklen_t addrlen, int errmode);
+int         Listen      (int sockfd, int backlog, int errmode);
+int         Accept      (int sockfd, struct sockaddr *cliaddr, socklen_t *addrlenptr, int errmode);
+int         Connect     (int sockfd, const struct sockaddr *srvaddr, socklen_t addrlen, int errmode);
+int         Select      (int nfds, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout, int errmode);
+int         Close       (int sockfd, int errmode);
+int         Shutdown    (int sockfd, int howto, int errmode);
 
 /* -------- Read/write functions -------------------------------------------- */
 
-ssize_t     ReadQ       (int fd, void *bufptr, size_t nbytes);
-ssize_t     WriteQ      (int fd, const void *bufptr, size_t nbytes);
-ssize_t     RecvQ       (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     RecvfromQ   (int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr *sa, socklen_t *salenptr);
-ssize_t     SendQ       (int fd, const void *bufptr, size_t nbytes, int flags);
-ssize_t     SendtoQ     (int fd, const void *bufptr, size_t nbytes, int flags, const struct sockaddr *sa, socklen_t salen);
-
-ssize_t     ReadR       (int fd, void *bufptr, size_t nbytes);
-ssize_t     WriteR      (int fd, const void *bufptr, size_t nbytes);
-ssize_t     RecvR       (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     RecvfromR   (int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr *sa, socklen_t *salenptr);
-ssize_t     SendR       (int fd, const void *bufptr, size_t nbytes, int flags);
-ssize_t     SendtoR     (int fd, const void *bufptr, size_t nbytes, int flags, const struct sockaddr *sa, socklen_t salen);
+ssize_t     Read        (int fd, void *bufptr, size_t nbytes, int timeout, int errmode);
+ssize_t     Write       (int fd, const void *bufptr, size_t nbytes, int timeout, int errmode);
+ssize_t     Recv        (int fd, void *bufptr, size_t nbytes, int flags, int timeout, int errmode);
+ssize_t     Recvfrom    (int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr *sa, socklen_t *salenptr, int timeout, int errmode);
+ssize_t     Send        (int fd, const void *bufptr, size_t nbytes, int flags, int timeout, int errmode);
+ssize_t     Sendto      (int fd, const void *bufptr, size_t nbytes, int flags, const struct sockaddr *sa, socklen_t salen, int timeout, int errmode);
 
 /* -------- Read/write n bytes functions ------------------------------------ */
 
-ssize_t     readn       (int fd, void *bufptr, size_t nbytes);
-ssize_t     ReadnQ      (int fd, void *bufptr, size_t nbytes);
-ssize_t     ReadnR      (int fd, void *bufptr, size_t nbytes);
-ssize_t     writen      (int fd, const void *bufptr, size_t nbytes);
-ssize_t     WritenQ     (int fd, const void *bufptr, size_t nbytes);
-ssize_t     WritenR     (int fd, const void *bufptr, size_t nbytes);
+ssize_t     Readn       (int fd, void *bufptr, size_t nbytes, int timeout, int errmode);
+ssize_t     Writen      (int fd, const void *bufptr, size_t nbytes, int timeout, int errmode);
 
-ssize_t     recvn       (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     RecvnQ      (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     RecvnR      (int fd, void *bufptr, size_t nbytes, int flags);
-ssize_t     sendn       (int fd, const void *bufptr, size_t nbytes, int flags);
-ssize_t     SendnQ      (int fd, const void *bufptr, size_t nbytes, int flags);
-ssize_t     SendnR      (int fd, const void *bufptr, size_t nbytes, int flags);
+ssize_t     Recvn       (int fd, void *bufptr, size_t nbytes, int flags, int timeout, int errmode);
+ssize_t     Sendn       (int fd, const void *bufptr, size_t nbytes, int flags, int timeout, int errmode);
 
-ssize_t     readline    (int fd, void *bufptr, size_t maxlen);
-ssize_t     ReadlineQ   (int fd, void *bufptr, size_t maxlen);
-ssize_t     ReadlineR   (int fd, void *bufptr, size_t maxlen);
-ssize_t     recvline    (int fd, void *bufptr, size_t maxlen, int flags);
-ssize_t     RecvlineQ   (int fd, void *bufptr, size_t maxlen, int flags);
-ssize_t     RecvlineR   (int fd, void *bufptr, size_t maxlen, int flags);
+ssize_t     Readline    (int fd, void *bufptr, size_t maxlen, int timeout, int errmode);
+ssize_t     Recvline    (int fd, void *bufptr, size_t maxlen, int flags, int timeout, int errmode);
 
 /* -------- Translation functions ------------------------------------------- */
 
-void        Inet_ptonQ  (int af, const char *strptr, void *addrptr);
-void        Inet_ntopQ  (int af, const void *addrptr, char *strptr, size_t length);
-int         Inet_ptonR  (int af, const char *strptr, void *addrptr);
-int         Inet_ntopR  (int af, const void *addrptr, char *strptr, size_t length);
+int         Inet_pton   (int af, const char *strptr, void *addrptr, int errmode);
+const char* Inet_ntop   (int af, const void *addrptr, char *strptr, size_t length, int errmode);
 
 /* -------- Socket status functions ------------------------------------------ */
 
-void        GetsocknameQ(int sockfd, struct sockaddr *localaddr, socklen_t *addrp);
-void        GetpeernameQ(int fd, struct sockaddr *sa, socklen_t *salenptr);
-void        GetsockoptQ (int fd, int level, int optname, void *optval, socklen_t *optlenptr);
-void        SetsockoptQ (int fd, int level, int optname, const void *optval, socklen_t optlen);
-
-int         GetsocknameR(int sockfd, struct sockaddr *localaddr, socklen_t *addrp);
-int         GetpeernameR(int fd, struct sockaddr *sa, socklen_t *salenptr);
-int         GetsockoptR (int fd, int level, int optname, void *optval, socklen_t *optlenptr);
-int         SetsockoptR (int fd, int level, int optname, const void *optval, socklen_t optlen);
+int         Getsockname (int sockfd, struct sockaddr *localaddr, socklen_t *addrp, int errmode);
+int         Getpeername (int fd, struct sockaddr *sa, socklen_t *salenptr, int errmode);
+int         Getsockopt  (int fd, int level, int optname, void *optval, socklen_t *optlenptr, int errmode);
+int         Setsockopt  (int fd, int level, int optname, const void *optval, socklen_t optlen, int errmode);
 
 /* -------- Name resolution functions --------------------------------------- */
 
-void        GetaddrinfoQ(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);
-int         GetaddrinfoR(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);
+int         Getaddrinfo (const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res, int errmode);
 
 #endif

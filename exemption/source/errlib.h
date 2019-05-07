@@ -13,6 +13,7 @@
 #include    <stdlib.h>
 #include    <string.h>
 #include    <syslog.h>
+#include    <unistd.h>
 
 void        err_msg     (const char *fmt, ...);
 void        err_quit    (const char *fmt, ...);

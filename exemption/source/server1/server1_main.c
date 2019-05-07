@@ -26,7 +26,7 @@ void sigint_handler(int sig)
     if (sig == SIGINT)
     {
         /* Close the socket and terminate */
-        CloseQ(list_sock);
+        Close(list_sock, ERR_QUIT);
         info_msg("Server stopped");
         exit(0);
     }
@@ -48,13 +48,13 @@ int main(int argc, char const *argv[])
     addr_setup(NULL, argv[1], &server_addr);
 
     /* Open the socket */
-    list_sock = SocketQ(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    list_sock = Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP, ERR_QUIT);
 
     /* Bind the socket */
-    BindQ(list_sock, (struct sockaddr*) &server_addr, sizeof(server_addr));
+    Bind(list_sock, (struct sockaddr*) &server_addr, sizeof(server_addr), ERR_QUIT);
 
     /* Start listening on the socket */
-    ListenQ(list_sock, BACKLOG);
+    Listen(list_sock, BACKLOG, ERR_QUIT);
     info_msg("Server started on port %s", argv[1]);
 
     /* Setup the handler for SIGINT */
@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
         client_addr_len = sizeof(client_addr);
 
         /* Accept a connection from a client */
-        conn_sock = AcceptR(list_sock, (struct sockaddr*) &client_addr, &client_addr_len);
+        conn_sock = Accept(list_sock, (struct sockaddr*) &client_addr, &client_addr_len, ERR_RET);
 
         info_msg("Connection established with %s:%hu",
             inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
         while (run_server(conn_sock));
 
         /* Close the connected socket */
-        CloseR(conn_sock);
+        Close(conn_sock, ERR_RET);
 
         info_msg("Connection closed with %s:%hu",
             inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));

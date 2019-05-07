@@ -1,7 +1,5 @@
 #include "errlib.h"
 
-#define MAXLINE 4095
-
 extern char* prog_name;
 
 /* Nonfatal error related to system call
@@ -12,7 +10,7 @@ void err_ret(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    fprintf(stderr, "(%s) Error - ", prog_name);
+    fprintf(stderr, "(%s)(%d) Error - ", prog_name, getpid());
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, ": %s.\n", strerror(errno));
     va_end(ap);
@@ -27,7 +25,7 @@ void err_sys(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    fprintf(stderr, "(%s) Error - ", prog_name);
+    fprintf(stderr, "(%s)(%d) Error - ", prog_name, getpid());
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, ": %s.\n", strerror(errno));
     exit(1);
@@ -41,7 +39,7 @@ void err_msg(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    fprintf(stderr, "(%s) Error - ", prog_name);
+    fprintf(stderr, "(%s)(%d) Error - ", prog_name, getpid());
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, ".\n");
     va_end(ap);
@@ -56,7 +54,7 @@ void err_quit(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    fprintf(stderr, "(%s) Error - ", prog_name);
+    fprintf(stderr, "(%s)(%d) Error - ", prog_name, getpid());
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, ".\n");
     va_end(ap);
@@ -71,7 +69,7 @@ void info_msg(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    fprintf(stdout, "(%s) Info  - ", prog_name);
+    fprintf(stdout, "(%s)(%d) Info  - ", prog_name, getpid());
     vfprintf(stdout, fmt, ap);
     fprintf(stdout, ".\n");
     va_end(ap);

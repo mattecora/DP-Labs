@@ -5,16 +5,6 @@
 
 #include "client_lib.h"
 
-#define CHECK_TIMEOUT(sock, mode, op) \
-    ({\
-        if (select_socket(sock, TIMEOUT, mode) == 0)\
-        {\
-            err_msg("Socket timed out");\
-            return 0;\
-        }\
-        op;\
-    })
-
 void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
 {
     struct in_addr ip_struct;
@@ -28,29 +18,12 @@ void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
         addr->sin_addr.s_addr = INADDR_ANY;
     else
     {
-        Inet_ptonQ(AF_INET, ip, &ip_struct);
+        Inet_pton(AF_INET, ip, &ip_struct, ERR_QUIT);
         addr->sin_addr = ip_struct;
     }
 
     /* Convert port and set */
     addr->sin_port = htons(atoi(port));
-}
-
-int select_socket(int sock, int timeout, int mode)
-{
-    fd_set fds;
-    struct timeval select_timeout;
-
-    /* Setup structures for select */
-    FD_ZERO(&fds);
-    FD_SET(sock, &fds);
-    select_timeout.tv_usec = 0;
-    select_timeout.tv_sec = timeout;
-
-    /* Perform a select */
-    if (mode == SELECT_RD)
-        return (SelectQ(sock + 1, &fds, NULL, NULL, &select_timeout) > 0);
-    return (SelectQ(sock + 1, NULL, &fds, NULL, &select_timeout) > 0);
 }
 
 int send_request(int sock, const char *filename)
@@ -61,7 +34,7 @@ int send_request(int sock, const char *filename)
     sprintf(buffer, REQ_FMT, filename);
 
     /* Send the request */
-    CHECK_TIMEOUT(sock, SELECT_WR, SendnQ(sock, buffer, strlen(buffer) * sizeof(char), 0));
+    Sendn(sock, buffer, strlen(buffer) * sizeof(char), 0, TIMEOUT, ERR_QUIT);
 
     info_msg("File requested: %s", filename);
     return 1;
@@ -72,7 +45,7 @@ int parse_response(int sock)
     char buffer[MAXLEN];
 
     /* Read the first line with OK format */
-    CHECK_TIMEOUT(sock, SELECT_RD, RecvQ(sock, buffer, strlen(MSG_OK), 0));
+    Recvline(sock, buffer, MAXLEN, 0, TIMEOUT, ERR_QUIT);
 
     /* Check the first line */
     if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
@@ -105,7 +78,7 @@ int recv_file(int sock, const char *filename)
     }
 
     /* Read the length */
-    CHECK_TIMEOUT(sock, SELECT_RD, RecvnQ(sock, &len_n, sizeof(uint32_t), 0));
+    Recvn(sock, &len_n, sizeof(uint32_t), 0, TIMEOUT, ERR_QUIT);
     len = ntohl(len_n);
     info_msg("Length of the file: %d bytes", len);
 
@@ -117,10 +90,10 @@ int recv_file(int sock, const char *filename)
         n = (left > MAXLEN) ? MAXLEN : left;
 
         /* Read socket to buffer */
-        CHECK_TIMEOUT(sock, SELECT_RD, RecvnQ(sock, buffer, n, 0));
+        Recvn(sock, buffer, n, 0, TIMEOUT, ERR_QUIT);
 
         /* Write buffer to file */
-        CHECK_TIMEOUT(fd, SELECT_WR, WritenQ(fd, buffer, n));
+        Writen(fd, buffer, n, TIMEOUT, ERR_QUIT);
 
         /* Update left */
         left = left - n;
@@ -129,7 +102,7 @@ int recv_file(int sock, const char *filename)
     }
 
     /* Read the mtime */
-    CHECK_TIMEOUT(sock, SELECT_RD, RecvnQ(sock, &mtime_n, sizeof(uint32_t), 0));
+    Recvn(sock, &mtime_n, sizeof(uint32_t), 0, TIMEOUT, ERR_QUIT);
     mtime = ntohl(mtime_n);
 
     /* Pretty-print the mtime */
@@ -139,7 +112,7 @@ int recv_file(int sock, const char *filename)
     info_msg("File received: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
 
     /* Close the file */
-    CloseQ(fd);
+    Close(fd, ERR_QUIT);
 
     return 1;
 }
