@@ -5,27 +5,6 @@
 
 #include "client_lib.h"
 
-void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
-{
-    struct in_addr ip_struct;
-
-    /* Clear the memory and set address family */
-    memset(addr, 0, sizeof(*addr));
-    addr->sin_family = AF_INET;
-
-    /* Convert address and set */
-    if (ip == NULL)
-        addr->sin_addr.s_addr = INADDR_ANY;
-    else
-    {
-        Inet_pton(AF_INET, ip, &ip_struct, ERR_QUIT);
-        addr->sin_addr = ip_struct;
-    }
-
-    /* Convert port and set */
-    addr->sin_port = htons(atoi(port));
-}
-
 int send_request(int sock, const char *filename)
 {
     char buffer[MAXLEN];
@@ -48,10 +27,16 @@ int parse_response(int sock)
     Recvline(sock, buffer, MAXLEN, 0, TIMEOUT, ERR_QUIT);
 
     /* Check the first line */
-    if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
+    if (strncmp(buffer, MSG_ERR, strlen(MSG_ERR)) == 0)
     {
-        /* Error or unknown response */
-        err_msg("Response received: error or unknown");
+        /* Error response */
+        err_msg("Response received: error");
+        return 0;
+    }
+    else if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
+    {
+        /* Unknown response */
+        err_msg("Response received: unknown");
         return 0;
     }
 
@@ -63,7 +48,7 @@ int parse_response(int sock)
 int recv_file(int sock, const char *filename)
 {
     int n, fd;
-    char buffer[MAXLEN], mtime_pretty[MAXLEN];
+    char buffer[MAXLEN];
     off_t len;
     time_t mtime;
     uint32_t len_n, mtime_n, left;
@@ -80,7 +65,7 @@ int recv_file(int sock, const char *filename)
     /* Read the length */
     Recvn(sock, &len_n, sizeof(uint32_t), 0, TIMEOUT, ERR_QUIT);
     len = ntohl(len_n);
-    info_msg("Length of the file: %d bytes", len);
+    info_msg("File length: %d bytes", len);
 
     /* Read the file */
     left = len;
@@ -104,12 +89,9 @@ int recv_file(int sock, const char *filename)
     /* Read the mtime */
     Recvn(sock, &mtime_n, sizeof(uint32_t), 0, TIMEOUT, ERR_QUIT);
     mtime = ntohl(mtime_n);
+    info_msg("File last modification: %d", mtime);
 
-    /* Pretty-print the mtime */
-    strftime(mtime_pretty, MAXLEN, "%c", localtime(&mtime));
-    info_msg("Last modification time of the file: %s", mtime_pretty);
-
-    info_msg("File received: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
+    info_msg("File received: %s (len: %d, mtime: %d)", filename, len, mtime);
 
     /* Close the file */
     Close(fd, ERR_QUIT);
@@ -125,8 +107,8 @@ int run_client(int sock, const char *filename)
     /* Check the response */
     if (parse_response(sock) != 0)
     {
-        /* Receive the file */
-        return recv_file(sock, filename);
+        /* Receive the file and store it in the current folder */
+        return recv_file(sock, (strrchr(filename, '/') == NULL) ? filename : strrchr(filename, '/') + 1);
     }
 
     /* An error has occurred */

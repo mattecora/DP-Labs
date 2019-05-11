@@ -71,5 +71,6 @@ int         Setsockopt  (int fd, int level, int optname, const void *optval, soc
 /* -------- Name resolution functions --------------------------------------- */
 
 int         Getaddrinfo (const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res, int errmode);
+int         Getnameinfo (const struct sockaddr *addr, socklen_t addrlen, char *host, socklen_t hostlen, char *serv, socklen_t servlen, int flags, int errmode);
 
 #endif

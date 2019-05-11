@@ -22,6 +22,7 @@ int waitfd(int fd, int timeout, int optype)
 int Socket(int family, int type, int protocol, int errmode)
 {
     int n;
+
     if ((n = socket(family, type, protocol)) < 0)
     {
         if (errmode == ERR_RET)
@@ -53,8 +54,10 @@ int Bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen, int errmode
 int Listen(int sockfd, int backlog, int errmode)
 {
     char *ptr;
+
     if ((ptr = getenv("LISTENQ")) != NULL)
         backlog = atoi(ptr);
+    
     if (listen(sockfd, backlog) < 0)
     {
         if (errmode == ERR_RET)
@@ -71,6 +74,7 @@ int Listen(int sockfd, int backlog, int errmode)
 int Accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlenptr, int errmode)
 {
     int n;
+
 again:
     if ((n = accept(sockfd, cliaddr, addrlenptr)) < 0)
     {
@@ -111,6 +115,7 @@ int Connect(int sockfd, const struct sockaddr *srvaddr, socklen_t addrlen, int e
 int Select(int nfds, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout, int errmode)
 {
     int n;
+
 again:
     if ((n = select(nfds, readset, writeset, exceptset, timeout)) < 0)
     {
@@ -163,8 +168,20 @@ int Shutdown(int fd, int howto, int errmode)
 ssize_t Read(int fd, void *bufptr, size_t nbytes, int timeout, int errmode)
 {
     ssize_t n;
+
 again:
-    if (!waitfd(fd, timeout, WAIT_RD) || (n = read(fd, bufptr, nbytes)) < 0)
+    if (!waitfd(fd, timeout, WAIT_RD))
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Read() failed: Operation timed out");
+            return -1;
+        }
+        else
+            err_quit("Read() failed: Operation timed out");
+    }
+
+    if ((n = read(fd, bufptr, nbytes)) < 0)
     {
         if (errno == EINTR)
             goto again;
@@ -176,7 +193,7 @@ again:
                 return -1;
             }
             else
-                err_quit("Read() failed");
+                err_sys("Read() failed");
         }
     }
     return n;
@@ -185,7 +202,19 @@ again:
 ssize_t Write(int fd, const void *bufptr, size_t nbytes, int timeout, int errmode)
 {
     ssize_t n;
-    if (!waitfd(fd, timeout, WAIT_WR) || (n = write(fd, bufptr, nbytes)) != nbytes)
+
+    if (!waitfd(fd, timeout, WAIT_WR))
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Write() failed: Operation timed out");
+            return -1;
+        }
+        else
+            err_quit("Write() failed: Operation timed out");
+    }
+
+    if ((n = write(fd, bufptr, nbytes)) != nbytes)
     {
         if (errmode == ERR_RET)
         {
@@ -193,7 +222,7 @@ ssize_t Write(int fd, const void *bufptr, size_t nbytes, int timeout, int errmod
             return -1;
         }
         else
-            err_quit("Write() failed");
+            err_sys("Write() failed");
     }
     return n;
 }
@@ -201,8 +230,20 @@ ssize_t Write(int fd, const void *bufptr, size_t nbytes, int timeout, int errmod
 ssize_t Recv(int fd, void *bufptr, size_t nbytes, int flags, int timeout, int errmode)
 {
     ssize_t n;
+
 again:
-    if (!waitfd(fd, timeout, WAIT_RD) || (n = recv(fd, bufptr, nbytes, flags)) < 0)
+    if (!waitfd(fd, timeout, WAIT_RD))
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Recv() failed: Operation timed out");
+            return -1;
+        }
+        else
+            err_quit("Recv() failed: Operation timed out");
+    }
+
+    if ((n = recv(fd, bufptr, nbytes, flags)) < 0)
     {
         if (errno == EINTR)
             goto again;
@@ -214,7 +255,7 @@ again:
                 return -1;
             }
             else
-                err_quit("Recv() failed");
+                err_sys("Recv() failed");
         }
     }
     return n;
@@ -223,8 +264,20 @@ again:
 ssize_t Recvfrom(int fd, void *bufptr, size_t nbytes, int flags, struct sockaddr *sa, socklen_t *salenptr, int timeout, int errmode)
 {
     ssize_t n;
+
 again:
-    if (!waitfd(fd, timeout, WAIT_RD) || (n = recvfrom(fd, bufptr, nbytes, flags, sa, salenptr)) < 0)
+    if (!waitfd(fd, timeout, WAIT_RD))
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Recvfrom() failed: Operation timed out");
+            return -1;
+        }
+        else
+            err_quit("Recvfrom() failed: Operation timed out");
+    }
+
+    if ((n = recvfrom(fd, bufptr, nbytes, flags, sa, salenptr)) < 0)
     {
         if (errno == EINTR)
             goto again;
@@ -236,7 +289,7 @@ again:
                 return -1;
             }
             else
-                err_quit("Recvfrom() failed");
+                err_sys("Recvfrom() failed");
         }
     }
     return n;
@@ -245,7 +298,19 @@ again:
 ssize_t Send(int fd, const void *bufptr, size_t nbytes, int flags, int timeout, int errmode)
 {
     ssize_t n;
-    if (!waitfd(fd, timeout, WAIT_WR) || (n = send(fd, bufptr, nbytes, flags)) != nbytes)
+
+    if (!waitfd(fd, timeout, WAIT_WR))
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Send() failed: Operation timed out");
+            return -1;
+        }
+        else
+            err_quit("Send() failed: Operation timed out");
+    }
+
+    if ((n = send(fd, bufptr, nbytes, flags)) != nbytes)
     {
         if (errmode == ERR_RET)
         {
@@ -253,7 +318,7 @@ ssize_t Send(int fd, const void *bufptr, size_t nbytes, int flags, int timeout, 
             return -1;
         }
         else
-            err_quit("Send() failed");
+            err_sys("Send() failed");
     }
     return n;
 }
@@ -261,7 +326,19 @@ ssize_t Send(int fd, const void *bufptr, size_t nbytes, int flags, int timeout, 
 ssize_t Sendto(int fd, const void *bufptr, size_t nbytes, int flags, const struct sockaddr *sa, socklen_t salen, int timeout, int errmode)
 {
     ssize_t n;
-    if (!waitfd(fd, timeout, WAIT_WR) || (n = sendto(fd, bufptr, nbytes, flags, sa, salen)) != nbytes)
+
+    if (!waitfd(fd, timeout, WAIT_WR))
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Sendto() failed: Operation timed out");
+            return -1;
+        }
+        else
+            err_quit("Sendto() failed: Operation timed out");
+    }
+
+    if ((n = sendto(fd, bufptr, nbytes, flags, sa, salen)) != nbytes)
     {
         if (errmode == ERR_RET)
         {
@@ -269,7 +346,7 @@ ssize_t Sendto(int fd, const void *bufptr, size_t nbytes, int flags, const struc
             return -1;
         }
         else
-            err_quit("Sendto() failed");
+            err_sys("Sendto() failed");
     }
     return n;
 }
@@ -443,6 +520,7 @@ ssize_t Recvline(int fd, void *bufptr, size_t maxlen, int flags, int timeout, in
 int Inet_pton(int af, const char *strptr, void *addrptr, int errmode)
 {
     int status = inet_pton(af, strptr, addrptr);
+
     if (status == 0)
     {
         if (errmode == ERR_RET)
@@ -463,6 +541,7 @@ int Inet_pton(int af, const char *strptr, void *addrptr, int errmode)
 const char* Inet_ntop(int af, const void *addrptr, char *strptr, size_t length, int errmode)
 {
     const char *ret = inet_ntop(af, addrptr, strptr, length);
+
     if (ret == NULL)
     {
         if (errmode == ERR_RET)
@@ -536,6 +615,7 @@ int Setsockopt(int fd, int level, int optname, const void *optval, socklen_t opt
 int Getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res, int errmode)
 {
     int err_code = getaddrinfo(node, service, hints, res);
+    
     if (err_code != 0)
     {
         if (errmode == ERR_RET)
@@ -545,6 +625,23 @@ int Getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
         }
         else
             err_quit("Getaddrinfo() failed: %s", gai_strerror(err_code));
+    }
+    return err_code;
+}
+
+int Getnameinfo(const struct sockaddr *addr, socklen_t addrlen, char *host, socklen_t hostlen, char *serv, socklen_t servlen, int flags, int errmode)
+{
+    int err_code = getnameinfo(addr, addrlen, host, hostlen, serv, servlen, flags);
+    
+    if (err_code != 0)
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Getnameinfo() failed: %s", gai_strerror(err_code));
+            return 0;
+        }
+        else
+            err_quit("Getnameinfo() failed: %s", gai_strerror(err_code));
     }
     return err_code;
 }

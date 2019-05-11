@@ -5,28 +5,7 @@
 
 #include "server_lib.h"
 
-void addr_setup(const char *ip, const char *port, struct sockaddr_in *addr)
-{
-    struct in_addr ip_struct;
-
-    /* Clear the memory and set address family */
-    memset(addr, 0, sizeof(*addr));
-    addr->sin_family = AF_INET;
-
-    /* Convert address and set */
-    if (ip == NULL)
-        addr->sin_addr.s_addr = INADDR_ANY;
-    else
-    {
-        Inet_pton(AF_INET, ip, &ip_struct, ERR_QUIT);
-        addr->sin_addr = ip_struct;
-    }
-
-    /* Convert port and set */
-    addr->sin_port = htons(atoi(port));
-}
-
-int read_request(int conn_sock, char *buffer)
+int recv_request(int conn_sock, char *buffer)
 {
     /* Read client request */
     if (Recvline(conn_sock, buffer, MAXLEN, 0, TIMEOUT, ERR_RET) == 0)
@@ -41,7 +20,7 @@ int read_request(int conn_sock, char *buffer)
 
 int check_request(char *request, char *filename)
 {
-    char cmp_buffer[MAXLEN];
+    char cmp_buffer[MAXLEN], abspath[MAXLEN], cwd[MAXLEN];
 
     /* Try to read the filename */
     if (sscanf(request, REQ_FMT, filename) != 1)
@@ -61,10 +40,21 @@ int check_request(char *request, char *filename)
     }
     
     /* Check the file is accessible */
-    if (access(filename, F_OK) != 0)
+    if (access(filename, R_OK) != 0)
     {
         /* File is not accessible */
         err_msg("Requested file cannot be accessed");
+        return 0;
+    }
+
+    /* Check that file is in server's working directory */
+    realpath(filename, abspath);
+    getcwd(cwd, MAXLEN);
+    
+    if (strncmp(abspath, cwd, strlen(cwd)) != 0)
+    {
+        /* File is not in server's folder */
+        err_msg("Requested file is not in server's folder");
         return 0;
     }
     
@@ -74,7 +64,7 @@ int check_request(char *request, char *filename)
 int send_file(int conn_sock, char *filename)
 {
     int n, fd;
-    char buffer[MAXLEN], mtime_pretty[MAXLEN];
+    char buffer[MAXLEN];
     off_t len;
     time_t mtime;
     uint32_t len_n, mtime_n, left;
@@ -92,10 +82,7 @@ int send_file(int conn_sock, char *filename)
     len = file_stat.st_size;
     mtime = file_stat.st_mtime;
 
-    /* Get mtime string representation */
-    strftime(mtime_pretty, MAXLEN, "%c", localtime(&mtime));
-
-    info_msg("File requested: %s (len: %d bytes, mtime: %s)", filename, len, mtime_pretty);
+    info_msg("File requested: %s (len: %d, mtime: %d)", filename, len, mtime);
 
     /* Send the ok message */
     if (Sendn(conn_sock, MSG_OK, strlen(MSG_OK) * sizeof(char), MSG_NOSIGNAL, TIMEOUT, ERR_RET) < 0)
@@ -124,8 +111,7 @@ int send_file(int conn_sock, char *filename)
         /* Update left */
         left = left - n;
 
-        info_msg("Progress: %d of %d bytes sent (%d%%)",
-                 len - left, len, (len - left) * 100 / len);
+        info_msg("Progress: %d of %d bytes sent (%d%%)", len - left, len, (len - left) * 100 / len);
     }
 
     /* Send the mtime */
@@ -152,7 +138,7 @@ int run_server(int conn_sock)
     char buffer[MAXLEN], filename[MAXLEN];
 
     /* Read incoming request */
-    if (read_request(conn_sock, buffer) == 0)
+    if (recv_request(conn_sock, buffer) == 0)
         return 0;
 
     /* Parse incoming request */
