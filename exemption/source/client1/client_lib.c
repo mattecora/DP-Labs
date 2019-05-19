@@ -140,10 +140,14 @@ int recv_file(int sock, const char *filename)
     return 1;
 }
 
-int run_client(int sock, const char *filename)
+int run_client(int sock, const char *filename, int last)
 {
     /* Send a request for the file */
     send_request(sock, filename);
+
+    /* Shutdown writes if no more files will be requested */
+    if (last)
+        Shutdown(sock, SHUT_WR, ERR_QUIT);
 
     /* Check the response */
     if (parse_response(sock) != 0)

@@ -76,9 +76,10 @@ int recv_file(int sock, const char *filename);
  * 
  * Parameters:  - the connected socket to which the request is sent (int)
  *              - the name of the file to be requested (char*)
+ *              - a flag indicating if the file to request is the last (int)
  * 
  * Returns:     1 in case of success, 0 otherwise
 */
-int run_client(int sock, const char *filename);
+int run_client(int sock, const char *filename, int last);
 
 #endif

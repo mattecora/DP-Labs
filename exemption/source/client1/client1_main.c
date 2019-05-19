@@ -70,7 +70,7 @@ int main(int argc, char const *argv[])
 	for (i = 3; i < argc; i++)
 	{
 		/* Handle a request and, in case of error, break */
-		if (run_client(sock, argv[i]) == 0)
+		if (run_client(sock, argv[i], i == (argc - 1)) == 0)
 			break;
 	}
 
