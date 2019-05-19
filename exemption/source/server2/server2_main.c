@@ -34,8 +34,8 @@ void signal_handler(int sig)
     }
     else if (sig == SIGCHLD)
     {
-        /* A child has terminated, collect the return value */
-        wait(NULL);
+        /* One or more children have terminated, free them */
+        while (waitpid(-1, NULL, WNOHANG) > 0);
     }
 }
 

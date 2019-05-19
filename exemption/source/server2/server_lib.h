@@ -24,9 +24,12 @@
 
 #define TIMEOUT 15
 #define MAXLEN  4096
+#define BUFSIZE 4096
+
 #define MSG_OK  "+OK\r\n"
 #define MSG_ERR "-ERR\r\n"
-#define REQ_FMT "GET %s\r\n"
+#define REQ_FMTO "GET %s\r\n"
+#define REQ_FMTI "GET %[^\r\n]\r\n"
 
 extern const char *prog_name;
 

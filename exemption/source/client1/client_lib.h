@@ -24,11 +24,22 @@
 
 #define TIMEOUT 15
 #define MAXLEN  4096
+#define BUFSIZE 4096
+
 #define MSG_OK  "+OK\r\n"
 #define MSG_ERR "-ERR\r\n"
 #define REQ_FMT "GET %s\r\n"
 
 extern const char *prog_name;
+
+/* 
+ * Description: Creates a directory tree to store the given filename.
+ * 
+ * Parameters:  - the name of the file for which dirs should be created (char*)
+ * 
+ * Returns:     1 in case of success, 0 otherwise
+ */
+int create_dirs(const char *filename);
 
 /* 
  * Description: Sends a request for the given filename to the given socket.

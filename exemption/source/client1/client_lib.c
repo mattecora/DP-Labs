@@ -5,6 +5,45 @@
 
 #include "client_lib.h"
 
+int create_dirs(const char *filename)
+{
+    char path[MAXLEN], cwd[MAXLEN];
+    char *dir, *last;
+    
+    /* Store the current working directory */
+    getcwd(cwd, MAXLEN);
+
+    /* Copy the path and extract the directory name */
+    strncpy(path, filename, strlen(filename));
+    
+    /* Search last occurence of / */
+    last = strrchr(path, '/');
+
+    /* If no /, no folders need to be created */
+    if (last == NULL)
+        return 1;
+    
+    /* Clear the filename, maintain only path */
+    memset(last, 0, strlen(last));
+
+    /* Split the path on the directory separator */
+    for (dir = strtok(path, "/"); dir != NULL; dir = strtok(NULL, "/"))
+    {
+        /* Create the directory if not existing */
+        if (mkdir(dir, 0777) != 0 && errno != EEXIST)
+            return 0;
+        
+        /* Move inside the new directory */
+        if (chdir(dir) != 0)
+            return 0;
+    }
+
+    /* Restore the initial working directory */
+    if (chdir(cwd) != 0)
+        return 0;
+    return 1;
+}
+
 int send_request(int sock, const char *filename)
 {
     char buffer[MAXLEN];
@@ -24,19 +63,13 @@ int parse_response(int sock)
     char buffer[MAXLEN];
 
     /* Read the first line with OK format */
-    Recvline(sock, buffer, MAXLEN, 0, TIMEOUT, ERR_QUIT);
+    Recvn(sock, buffer, strlen(MSG_OK) * sizeof(char), 0, TIMEOUT, ERR_QUIT);
 
     /* Check the first line */
-    if (strncmp(buffer, MSG_ERR, strlen(MSG_ERR)) == 0)
+    if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
     {
         /* Error response */
-        err_msg("Response received: error");
-        return 0;
-    }
-    else if (strncmp(buffer, MSG_OK, strlen(MSG_OK)) != 0)
-    {
-        /* Unknown response */
-        err_msg("Response received: unknown");
+        err_msg("Response received: error or unknown");
         return 0;
     }
 
@@ -48,10 +81,18 @@ int parse_response(int sock)
 int recv_file(int sock, const char *filename)
 {
     int n, fd;
-    char buffer[MAXLEN];
-    off_t len;
+    char buffer[BUFSIZE];
+    off_t len, left;
     time_t mtime;
-    uint32_t len_n, mtime_n, left;
+    uint32_t len_n, mtime_n;
+
+    /* Create the directory tree */
+    if (!create_dirs(filename))
+    {
+        /* Directory tree cannot be created */
+        err_msg("Directory tree cannot be created");
+        return 0;
+    }
     
     /* Open the file in write mode, or create it */
     fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -71,8 +112,8 @@ int recv_file(int sock, const char *filename)
     left = len;
     while (left != 0)
     {
-        /* Decide how many bytes to read, left or at most MAXLEN */
-        n = (left > MAXLEN) ? MAXLEN : left;
+        /* Decide how many bytes to read, left or at most BUFSIZE */
+        n = (left > BUFSIZE) ? BUFSIZE : left;
 
         /* Read socket to buffer */
         Recvn(sock, buffer, n, 0, TIMEOUT, ERR_QUIT);
@@ -108,7 +149,7 @@ int run_client(int sock, const char *filename)
     if (parse_response(sock) != 0)
     {
         /* Receive the file and store it in the current folder */
-        return recv_file(sock, (strrchr(filename, '/') == NULL) ? filename : strrchr(filename, '/') + 1);
+        return recv_file(sock, filename);
     }
 
     /* An error has occurred */

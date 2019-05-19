@@ -4,6 +4,14 @@
 #define WAIT_RD 0
 #define WAIT_WR 1
 
+#define MAXLINE 4096
+
+int line_cnt = 0;
+char *line_ptr;
+char line_buf[MAXLINE];
+
+/* INTERNAL FUNCTIONS */
+
 int waitfd(int fd, int timeout, int optype)
 {
     fd_set fds;
@@ -16,8 +24,42 @@ int waitfd(int fd, int timeout, int optype)
 
     if (optype == WAIT_RD)
         return (select(fd + 1, &fds, NULL, NULL, &select_timeout) > 0);
-    return (select(fd + 1, NULL, &fds, NULL, &select_timeout) > 0);
+    else if (optype == WAIT_WR)
+        return (select(fd + 1, NULL, &fds, NULL, &select_timeout) > 0);
+    return -1;
 }
+
+ssize_t readcharbuf(int fd, char *ptr, int timeout, int errmode)
+{
+	if (line_cnt <= 0)
+	{
+		if ((line_cnt = Read(fd, line_buf, MAXLINE, timeout, errmode)) < 0)
+            return -1;
+		else if (line_cnt == 0)
+			return 0;
+		line_ptr = line_buf;
+	}
+    line_cnt--;
+    *ptr = *line_ptr++;
+	return 1;
+}
+
+ssize_t recvcharbuf(int fd, char *ptr, int flags, int timeout, int errmode)
+{
+	if (line_cnt <= 0)
+	{
+		if ((line_cnt = Recv(fd, line_buf, MAXLINE, flags, timeout, errmode)) < 0)
+            return -1;
+		else if (line_cnt == 0)
+			return 0;
+		line_ptr = line_buf;
+	}
+    line_cnt--;
+    *ptr = *line_ptr++;
+	return 1;
+}
+
+/* IMPLEMENTATION OF LIBRARY FUNCTIONS */
 
 int Socket(int family, int type, int protocol, int errmode)
 {
@@ -94,6 +136,11 @@ again:
                 err_sys("Accept() failed");
         }
     }
+
+    /* For sockets using linebuf reads, prevent usage of old data from previous reads */
+    line_cnt = 0;
+    line_ptr = line_buf;
+    
     return n;
 }
 
@@ -498,6 +545,62 @@ ssize_t Recvline(int fd, void *bufptr, size_t maxlen, int flags, int timeout, in
     for (n = 1; n < maxlen; n++)
     {
         if ((rc = Recv(fd, &c, 1, flags, timeout, errmode)) == 1)
+        {
+            *ptr++ = c;
+            if (c == '\n')
+                break; /* newline is stored, like fgets() */
+        }
+        else if (rc == 0)
+        {
+            if (n == 1)
+                return 0; /* EOF, no data read */
+            else
+                break; /* EOF, some data was read */
+        }
+        else
+            return -1; /* Error, errno set by read() */
+    }
+    *ptr = 0; /* null terminate like fgets() */
+    return n;
+}
+
+ssize_t Readlinebuf(int fd, void *bufptr, size_t maxlen, int timeout, int errmode)
+{
+    int n, rc;
+    char c, *ptr;
+
+    ptr = bufptr;
+    for (n = 1; n < maxlen; n++)
+    {
+        if ((rc = readcharbuf(fd, &c, timeout, errmode)) == 1)
+        {
+            *ptr++ = c;
+            if (c == '\n')
+                break; /* newline is stored, like fgets() */
+        }
+        else if (rc == 0)
+        {
+            if (n == 1)
+                return 0; /* EOF, no data read */
+            else
+                break; /* EOF, some data was read */
+        }
+        else
+            return -1; /* Error, errno set by read() */
+    }
+    *ptr = 0; /* null terminate like fgets() */
+    return n;
+}
+
+ssize_t Recvlinebuf(int fd, void *bufptr, size_t maxlen, int flags, int timeout, int errmode)
+{
+    int n, rc;
+    char c, *ptr;
+
+    ptr = bufptr;
+    for (n = 1; n < maxlen; n++)
+    {
+        if ((rc = recvcharbuf(fd, &c, 0, timeout, errmode)) == 1)
         {
             *ptr++ = c;
             if (c == '\n')

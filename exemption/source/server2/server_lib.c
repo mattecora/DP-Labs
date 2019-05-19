@@ -8,7 +8,7 @@
 int recv_request(int conn_sock, char *buffer)
 {
     /* Read client request */
-    if (Recvline(conn_sock, buffer, MAXLEN, 0, TIMEOUT, ERR_RET) == 0)
+    if (Recvlinebuf(conn_sock, buffer, MAXLEN, 0, TIMEOUT, ERR_RET) == 0)
     {
         /* No data, client has closed the connection */
         info_msg("Client has closed the connection");
@@ -23,7 +23,7 @@ int check_request(char *request, char *filename)
     char cmp_buffer[MAXLEN], abspath[MAXLEN], cwd[MAXLEN];
 
     /* Try to read the filename */
-    if (sscanf(request, REQ_FMT, filename) != 1)
+    if (sscanf(request, REQ_FMTI, filename) != 1)
     {
         /* Filename cannot be read */
         err_msg("Invalid request format");
@@ -31,7 +31,7 @@ int check_request(char *request, char *filename)
     }
 
     /* Check request format (additional spaces, incorrect termination...) */
-    sprintf(cmp_buffer, REQ_FMT, filename);
+    sprintf(cmp_buffer, REQ_FMTO, filename);
     if (strncmp(request, cmp_buffer, strlen(cmp_buffer)) != 0)
     {
         /* Request does not match requirements */
@@ -43,7 +43,7 @@ int check_request(char *request, char *filename)
     if (access(filename, R_OK) != 0)
     {
         /* File is not accessible */
-        err_msg("Requested file cannot be accessed");
+        err_msg("Requested file (%s) cannot be accessed", filename);
         return 0;
     }
 
@@ -54,7 +54,7 @@ int check_request(char *request, char *filename)
     if (strncmp(abspath, cwd, strlen(cwd)) != 0)
     {
         /* File is not in server's folder */
-        err_msg("Requested file is not in server's folder");
+        err_msg("Requested file (%s) is not in server's folder", filename);
         return 0;
     }
     
@@ -64,7 +64,7 @@ int check_request(char *request, char *filename)
 int send_file(int conn_sock, char *filename)
 {
     int n, fd;
-    char buffer[MAXLEN];
+    char buffer[BUFSIZE];
     off_t len;
     time_t mtime;
     uint32_t len_n, mtime_n, left;
@@ -97,11 +97,11 @@ int send_file(int conn_sock, char *filename)
     left = len;
     while (left != 0)
     {
-        /* Decide how many bytes to read, left or at most MAXLEN */
-        n = (left > MAXLEN) ? MAXLEN : left;
+        /* Decide how many bytes to read, left or at most BUFSIZE */
+        n = (left > BUFSIZE) ? BUFSIZE : left;
 
         /* Read file to buffer */
-        if (Readn(fd, buffer, MAXLEN, TIMEOUT, ERR_RET) < 0)
+        if (Readn(fd, buffer, n, TIMEOUT, ERR_RET) < 0)
             return 0;
 
         /* Write buffer to socket */

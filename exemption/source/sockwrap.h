@@ -7,10 +7,6 @@
 #ifndef     _SOCKWRAP_H
 #define     _SOCKWRAP_H
 
-#ifndef     __USE_XOPEN2K
-#define     __USE_XOPEN2K
-#endif
-
 #include    <arpa/inet.h>
 #include    <errno.h>
 #include    <netdb.h>
@@ -55,6 +51,8 @@ ssize_t     Sendn       (int fd, const void *bufptr, size_t nbytes, int flags, i
 
 ssize_t     Readline    (int fd, void *bufptr, size_t maxlen, int timeout, int errmode);
 ssize_t     Recvline    (int fd, void *bufptr, size_t maxlen, int flags, int timeout, int errmode);
+ssize_t     Readlinebuf (int fd, void *bufptr, size_t maxlen, int timeout, int errmode);
+ssize_t     Recvlinebuf (int fd, void *bufptr, size_t maxlen, int flags, int timeout, int errmode);
 
 /* -------- Translation functions ------------------------------------------- */
 
