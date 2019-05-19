@@ -1,5 +1,6 @@
 /******************************************************************************
- * client_lib.c : functions for the management of the client                  *
+ * client_lib.c                                                               *
+ * Library of functions for the management of the client                      *
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************/
 
@@ -14,12 +15,12 @@ int create_dirs(const char *filename)
     getcwd(cwd, MAXLEN);
 
     /* Copy the path and extract the directory name */
-    strncpy(path, filename, strlen(filename));
+    strncpy(path, filename, strlen(filename) + 1);
     
     /* Search last occurence of / */
     last = strrchr(path, '/');
 
-    /* If no /, no folders need to be created */
+    /* If no /, no folder needs to be created */
     if (last == NULL)
         return 1;
     
@@ -86,7 +87,7 @@ int recv_file(int sock, const char *filename)
     time_t mtime;
     uint32_t len_n, mtime_n;
 
-    /* Create the directory tree */
+    /* Create the directory tree to store the file */
     if (!create_dirs(filename))
     {
         /* Directory tree cannot be created */

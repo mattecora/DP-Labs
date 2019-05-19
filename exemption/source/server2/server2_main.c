@@ -1,6 +1,10 @@
 /******************************************************************************
- * server2_main.c : concurrent TCP server for exercise 3.1                    *
+ * server2_main.c                                                             *
+ * Concurrent TCP server for exercise 3.1                                     *
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
+ ******************************************************************************
+ * NOTE: This program uses a modified version of the sockwrap library, as de- *
+ *       scribed in sockwrap.h.											      *
  ******************************************************************************/
 
 #include <stdio.h>

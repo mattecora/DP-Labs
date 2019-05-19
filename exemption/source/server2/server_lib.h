@@ -1,5 +1,6 @@
 /******************************************************************************
- * server_lib.h : definition of functions for the management of the server    *
+ * server_lib.h                                                               *
+ * Library of functions for the management of the server                      *
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************/
 

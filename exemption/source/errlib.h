@@ -1,7 +1,13 @@
 /******************************************************************************
  * errlib.h                                                                   *
  * Library of error functions                                                 *
- * Adapted from Stevens, Unix network programming (3ed)                       *
+ * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
+ ******************************************************************************
+ * Adapted from Stevens, Unix network programming (3ed).                      *
+ * Modifications on the original library include the following:               *
+ * - Rewrite of the format of the messages in order to display the PID of the *
+ *   calling process.                                                         *
+ * - Introduction of the info_msg function, to be used for logging purposes.  *
  ******************************************************************************/
 
 #ifndef     _ERRLIB_H
@@ -12,7 +18,6 @@
 #include    <stdio.h>
 #include    <stdlib.h>
 #include    <string.h>
-#include    <syslog.h>
 #include    <unistd.h>
 
 void        err_msg     (const char *fmt, ...);

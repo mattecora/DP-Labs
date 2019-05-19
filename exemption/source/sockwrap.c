@@ -1,3 +1,9 @@
+/******************************************************************************
+ * sockwrap.c                                                                 *
+ * Library of wrapper and utility socket functions including error management *
+ * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
+ ******************************************************************************/
+
 #include "errlib.h"
 #include "sockwrap.h"
 
@@ -10,56 +16,7 @@ int line_cnt = 0;
 char *line_ptr;
 char line_buf[MAXLINE];
 
-/* INTERNAL FUNCTIONS */
-
-int waitfd(int fd, int timeout, int optype)
-{
-    fd_set fds;
-    struct timeval select_timeout;
-
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-    select_timeout.tv_usec = 0;
-    select_timeout.tv_sec = timeout;
-
-    if (optype == WAIT_RD)
-        return (select(fd + 1, &fds, NULL, NULL, &select_timeout) > 0);
-    else if (optype == WAIT_WR)
-        return (select(fd + 1, NULL, &fds, NULL, &select_timeout) > 0);
-    return -1;
-}
-
-ssize_t readcharbuf(int fd, char *ptr, int timeout, int errmode)
-{
-	if (line_cnt <= 0)
-	{
-		if ((line_cnt = Read(fd, line_buf, MAXLINE, timeout, errmode)) < 0)
-            return -1;
-		else if (line_cnt == 0)
-			return 0;
-		line_ptr = line_buf;
-	}
-    line_cnt--;
-    *ptr = *line_ptr++;
-	return 1;
-}
-
-ssize_t recvcharbuf(int fd, char *ptr, int flags, int timeout, int errmode)
-{
-	if (line_cnt <= 0)
-	{
-		if ((line_cnt = Recv(fd, line_buf, MAXLINE, flags, timeout, errmode)) < 0)
-            return -1;
-		else if (line_cnt == 0)
-			return 0;
-		line_ptr = line_buf;
-	}
-    line_cnt--;
-    *ptr = *line_ptr++;
-	return 1;
-}
-
-/* IMPLEMENTATION OF LIBRARY FUNCTIONS */
+/* -------- Socket management functions ------------------------------------- */
 
 int Socket(int family, int type, int protocol, int errmode)
 {
@@ -211,6 +168,57 @@ int Shutdown(int fd, int howto, int errmode)
     }
     return 0;
 }
+
+/* -------- Internal I/O functions ------------------------------------------ */
+
+int waitfd(int fd, int timeout, int optype)
+{
+    fd_set fds;
+    struct timeval select_timeout;
+
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    select_timeout.tv_usec = 0;
+    select_timeout.tv_sec = timeout;
+
+    if (optype == WAIT_RD)
+        return (Select(fd + 1, &fds, NULL, NULL, &select_timeout, ERR_RET) > 0);
+    else if (optype == WAIT_WR)
+        return (Select(fd + 1, NULL, &fds, NULL, &select_timeout, ERR_RET) > 0);
+    return -1;
+}
+
+ssize_t readcharbuf(int fd, char *ptr, int timeout, int errmode)
+{
+	if (line_cnt <= 0)
+	{
+		if ((line_cnt = Read(fd, line_buf, MAXLINE, timeout, errmode)) < 0)
+            return -1;
+		else if (line_cnt == 0)
+			return 0;
+		line_ptr = line_buf;
+	}
+    line_cnt--;
+    *ptr = *line_ptr++;
+	return 1;
+}
+
+ssize_t recvcharbuf(int fd, char *ptr, int flags, int timeout, int errmode)
+{
+	if (line_cnt <= 0)
+	{
+		if ((line_cnt = Recv(fd, line_buf, MAXLINE, flags, timeout, errmode)) < 0)
+            return -1;
+		else if (line_cnt == 0)
+			return 0;
+		line_ptr = line_buf;
+	}
+    line_cnt--;
+    *ptr = *line_ptr++;
+	return 1;
+}
+
+/* -------- Read/write functions -------------------------------------------- */
 
 ssize_t Read(int fd, void *bufptr, size_t nbytes, int timeout, int errmode)
 {
@@ -430,6 +438,8 @@ ssize_t Sendto(int fd, const void *bufptr, size_t nbytes, int flags, const struc
     }
     return n;
 }
+
+/* -------- Read/write n bytes functions ------------------------------------ */
 
 ssize_t Readn(int fd, void *bufptr, size_t nbytes, int timeout, int errmode)
 {
@@ -653,6 +663,8 @@ ssize_t Recvlinebuf(int fd, void *bufptr, size_t maxlen, int flags, int timeout,
     return n;
 }
 
+/* -------- Translation functions ------------------------------------------- */
+
 int Inet_pton(int af, const char *strptr, void *addrptr, int errmode)
 {
     int status = inet_pton(af, strptr, addrptr);
@@ -703,6 +715,8 @@ int Getsockname(int sockfd, struct sockaddr *localaddr, socklen_t *addrp, int er
     return 0;
 }
 
+/* -------- Socket status functions ------------------------------------------ */
+
 int Getpeername(int fd, struct sockaddr *sa, socklen_t *salenptr, int errmode)
 {
     if (getpeername(fd, sa, salenptr) < 0)
@@ -747,6 +761,8 @@ int Setsockopt(int fd, int level, int optname, const void *optval, socklen_t opt
     }
     return 0;
 }
+
+/* -------- Name resolution functions --------------------------------------- */
 
 int Getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res, int errmode)
 {

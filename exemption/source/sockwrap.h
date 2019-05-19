@@ -1,7 +1,19 @@
 /******************************************************************************
  * sockwrap.h                                                                 *
  * Library of wrapper and utility socket functions including error management *
- * Adapted from Stevens, Unix network programming (3ed)                       *
+ * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
+ ******************************************************************************
+ * Adapted from Stevens, Unix network programming (3ed).                      *
+ * Modifications on the original library include the following:               *
+ * - All functions present an additional parameter errmode, which can be set  *
+ *   to change the behavior of the different functions in case of error (fun- *
+ *   ction return for ERR_RET, program termination for ERR_QUIT); when called *
+ *   with ERR_QUIT, functions behave as in the original library, while in the *
+ *   other case they behave as their non-uppercase counterparts, with additi- *
+ *   onal error management capabilities.                                      *
+ * - I/O functions present an additional parameter timeout, which can be used *
+ *   to set a timeout to be used for the execution of the function; this eff- *
+ *   ectively masks a call to Select() with appropriate parameters.           *
  ******************************************************************************/
 
 #ifndef     _SOCKWRAP_H

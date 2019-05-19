@@ -1,5 +1,6 @@
 /******************************************************************************
- * server_lib.c : functions for the management of the server                  *
+ * server_lib.c                                                               *
+ * Library of functions for the management of the server                      *
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************/
 
@@ -32,6 +33,14 @@ int check_request(char *request, char *filename)
         err_msg("Invalid request format");
         return 0;
     }
+
+    /* Check that path is not absolute */
+    if (filename[0] == '/')
+    {
+        /* Given path is absolute */
+        err_msg("Requested file (%s) is an absolute path", filename);
+        return 0;
+    }
     
     /* Check the file is accessible */
     if (access(filename, R_OK) != 0)
@@ -41,7 +50,8 @@ int check_request(char *request, char *filename)
         return 0;
     }
 
-    /* Check that file is in server's working directory */
+    /* Check that file is in server's working directory
+       This prevent the user to use .. to navigate in the server filesystem */
     realpath(filename, abspath);
     getcwd(cwd, MAXLEN);
     

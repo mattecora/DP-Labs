@@ -1,3 +1,9 @@
+/******************************************************************************
+ * errlib.c                                                                   *
+ * Library of error functions                                                 *
+ * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
+ ******************************************************************************/
+
 #include "errlib.h"
 
 extern char* prog_name;

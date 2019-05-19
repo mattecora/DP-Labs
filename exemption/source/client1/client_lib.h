@@ -1,5 +1,6 @@
 /******************************************************************************
- * client_lib.h : definition of functions for the management of the client    *
+ * client_lib.h                                                               *
+ * Library of functions for the management of the client                      *
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************/
 
