@@ -90,12 +90,18 @@ int send_file(int conn_sock, char *filename)
 
     /* Send the ok message */
     if (Sendn(conn_sock, MSG_OK, strlen(MSG_OK) * sizeof(char), MSG_NOSIGNAL, TIMEOUT, ERR_RET) < 0)
+    {
+        Close(fd, ERR_RET);
         return 0;
+    }
 
     /* Send the length */
     len_n = htonl(len);
     if (Sendn(conn_sock, &len_n, sizeof(uint32_t), MSG_NOSIGNAL, TIMEOUT, ERR_RET) < 0)
+    {
+        Close(fd, ERR_RET);
         return 0;
+    }
 
     /* Send the file */
     left = len;
@@ -106,11 +112,17 @@ int send_file(int conn_sock, char *filename)
 
         /* Read file to buffer */
         if (Readn(fd, buffer, n, TIMEOUT, ERR_RET) < 0)
+        {
+            Close(fd, ERR_RET);
             return 0;
+        }
 
         /* Write buffer to socket */
         if (Sendn(conn_sock, buffer, n, MSG_NOSIGNAL, TIMEOUT, ERR_RET) < 0)
+        {
+            Close(fd, ERR_RET);
             return 0;
+        }
 
         /* Update left */
         left = left - n;
@@ -121,7 +133,10 @@ int send_file(int conn_sock, char *filename)
     /* Send the mtime */
     mtime_n = htonl(mtime);
     if (Sendn(conn_sock, &mtime_n, sizeof(uint32_t), MSG_NOSIGNAL, TIMEOUT, ERR_RET) < 0)
+    {
+        Close(fd, ERR_RET);
         return 0;
+    }
 
     info_msg("File sent: %s", filename);
 
