@@ -44,6 +44,7 @@ int main(int argc, char const *argv[])
     int conn_sock;
     char server_addr_str[ADDRLEN], server_serv_str[ADDRLEN];
     char client_addr_str[ADDRLEN], client_serv_str[ADDRLEN];
+    pid_t child;
     socklen_t client_addr_len;
     struct sockaddr_storage client_addr;
     struct addrinfo hints, *server_addrinfo, *ai;
@@ -106,7 +107,9 @@ int main(int argc, char const *argv[])
         conn_sock = Accept(list_sock, (struct sockaddr *)&client_addr, &client_addr_len, ERR_RET);
 
         /* Fork and handle requests in the child process */
-        if (fork() == 0)
+        if ((child = fork()) < 0)
+            err_quit("Cannot fork child process");
+        else if (child == 0)
         {
             info_msg("Child process forked");
 

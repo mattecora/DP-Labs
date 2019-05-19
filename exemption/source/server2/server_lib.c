@@ -8,14 +8,8 @@
 int recv_request(int conn_sock, char *buffer)
 {
     /* Read client request */
-    if (Recvlinebuf(conn_sock, buffer, MAXLEN, 0, TIMEOUT, ERR_RET) == 0)
-    {
-        /* No data, client has closed the connection */
-        info_msg("Client has closed the connection");
-        return 0;
-    }
-
-    return 1;
+    info_msg("Trying to read next request");
+    return (Recvlinebuf(conn_sock, buffer, MAXLEN * sizeof(char), 0, TIMEOUT, ERR_RET) > 0);
 }
 
 int check_request(char *request, char *filename)
@@ -65,9 +59,9 @@ int send_file(int conn_sock, char *filename)
 {
     int n, fd;
     char buffer[BUFSIZE];
-    off_t len;
+    off_t len, left;
     time_t mtime;
-    uint32_t len_n, mtime_n, left;
+    uint32_t len_n, mtime_n;
     struct stat file_stat;
 
     /* Open the file */

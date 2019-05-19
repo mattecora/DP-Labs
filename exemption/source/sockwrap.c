@@ -243,6 +243,17 @@ again:
                 err_sys("Read() failed");
         }
     }
+    else if (n == 0)
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Read() failed: Peer closed the connection");
+            return 0;
+        }
+        else
+            err_quit("Read() failed: Peer closed the connection");
+    }
+
     return n;
 }
 
@@ -305,6 +316,17 @@ again:
                 err_sys("Recv() failed");
         }
     }
+    else if (n == 0)
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Recv() failed: Peer closed the connection");
+            return 0;
+        }
+        else
+            err_quit("Recv() failed: Peer closed the connection");
+    }
+
     return n;
 }
 
@@ -339,6 +361,17 @@ again:
                 err_sys("Recvfrom() failed");
         }
     }
+    else if (n == 0)
+    {
+        if (errmode == ERR_RET)
+        {
+            err_msg("Recvfrom() failed: Peer closed the connection");
+            return 0;
+        }
+        else
+            err_quit("Recvfrom() failed: Peer closed the connection");
+    }
+    
     return n;
 }
 
