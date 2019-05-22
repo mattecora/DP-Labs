@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Lab 5.2.7</title>
+</head>
+<body>
+    <h1>Shopping cart</h1>
+    <table>
+        <tr>
+            <td>Floppy disk (0.50 &euro;)</td>
+            <td>
+                <select name="floppyNum" id="floppyNum">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>CD-R (1.0 &euro;)</td>
+            <td>
+                <select name="cdNum" id="cdNum">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>DVD-R (2.0 &euro;)</td>
+            <td>
+                <select name="dvdNum" id="dvdNum">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Total</td>
+            <td><input type="text" name="totalText" id="totalText" disabled="true"></td>
+        </tr>
+    </table>
+
+    <button onclick="computeTotal()">Compute</button>
+    <button onclick="cleanUp()">Cancel</button>
+    <p id="maxText"></p>
+    <script src="script.js"></script>
+</body>
+</html>
