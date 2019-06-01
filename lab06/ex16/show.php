@@ -1,10 +1,11 @@
 <?php
     require("products.php");
 
-    foreach ($products as $num => $prod) {
-        if (!isset($_COOKIE[$num])) {
-            setcookie($num, 0);
-            $_COOKIE[$num] = 0;
+    session_start();
+
+    foreach ($products as $prod) {
+        if (!isset($_SESSION[$prod->get_name()])) {
+            $_SESSION[$prod->get_name()] = 0;
         }
     }
 ?>
@@ -19,8 +20,8 @@
 </head>
 <body>
     <?php
-        if (isset($_GET["id"]) && ($id = intval($_GET["id"])) < sizeof($products)) {
-            $prod = $products[intval($_GET["id"])];
+        if (isset($_GET["name"]) && isset($products[$_GET["name"]])) {
+            $prod = $products[$_GET["name"]];
     ?>
     <h1><?php echo $prod->get_name(); ?></h1>
     <p><strong>Description:</strong> <?php echo $prod->get_desc(); ?></p>

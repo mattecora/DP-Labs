@@ -1,10 +1,11 @@
 <?php
     require("products.php");
+    
+    session_start();
 
-    foreach ($products as $num => $prod) {
-        if (!isset($_COOKIE[$num])) {
-            setcookie($num, 0);
-            $_COOKIE[$num] = 0;
+    foreach ($products as $prod) {
+        if (!isset($_SESSION[$prod->get_name()])) {
+            $_SESSION[$prod->get_name()] = 0;
         }
     }
 ?>
@@ -32,10 +33,10 @@
                 <th>Quantity</th>
             </thead>
             <tbody>
-                <?php foreach ($products as $num => $p) { ?>
+                <?php foreach ($products as $prod) { ?>
                 <tr>
-                    <td><a href="show.php?id=<?php echo $num; ?>"><?php echo $p->get_name(); ?></a></td>
-                    <td><input type="number" name="<?php echo $num; ?>" id="<?php echo $num; ?>"></td>
+                    <td><a href="show.php?name=<?php echo $prod->get_name(); ?>"><?php echo $prod->get_name(); ?></a></td>
+                    <td><input type="number" name="<?php echo $prod->get_name(); ?>" id="<?php echo $prod->get_name(); ?>"></td>
                 </tr>
                 <?php } ?>
             </tbody>

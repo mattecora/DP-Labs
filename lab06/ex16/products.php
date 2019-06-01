@@ -22,9 +22,9 @@ class Product {
 }
 
 $products = array(
-    new Product("Coffee", "A good coffee", 1.50),
-    new Product("Milk", "A quality milk", 1.20),
-    new Product("Orange juice", "A perfect juice", 2.00),
-    new Product("Coke", "A sugary coke", 1.80)
+    "Coffee" => new Product("Coffee", "A good coffee", 1.50),
+    "Milk" => new Product("Milk", "A quality milk", 1.20),
+    "OrangeJuice" => new Product("OrangeJuice", "A perfect juice", 2.00),
+    "Coke" => new Product("Coke", "A sugary coke", 1.80)
 );
 ?>

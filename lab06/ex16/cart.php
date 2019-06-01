@@ -1,18 +1,17 @@
 <?php
     require("products.php");
 
-    foreach ($products as $num => $prod) {
-        if (isset($_POST[$num])) {
-            if (isset($_POST["fromindex"]) && isset($_COOKIE[$num])) {
-                setcookie($num, intval($_COOKIE[$num]) + intval($_POST[$num]));
-                $_COOKIE[$num] = intval($_COOKIE[$num]) + intval($_POST[$num]);
+    session_start();
+
+    foreach ($products as $prod) {
+        if (isset($_POST[$prod->get_name()])) {
+            if (isset($_POST["fromindex"]) && isset($_SESSION[$prod->get_name()])) {
+                $_SESSION[$prod->get_name()] = intval($_SESSION[$prod->get_name()]) + intval($_POST[$prod->get_name()]);
             } else {
-                setcookie($num, $_POST[$num]);
-                $_COOKIE[$num] = $_POST[$num];
+                $_SESSION[$prod->get_name()] = $_POST[$prod->get_name()];
             }
-        } else if (!isset($_COOKIE[$num])) {
-            setcookie($num, 0);
-            $_COOKIE[$num] = 0;
+        } else if (!isset($_SESSION[$prod->get_name()])) {
+            $_SESSION[$prod->get_name()] = 0;
         }
     }
 ?>
@@ -41,12 +40,12 @@
             </thead>
             <tbody>
                 <?php
-                    foreach ($products as $num => $prod) {
-                        $qty = intval($_COOKIE[$num]);
+                    foreach ($products as $prod) {
+                        $qty = intval($_SESSION[$prod->get_name()]);
                 ?>
                 <tr>
                     <td><?php echo $prod->get_name(); ?></td>
-                    <td><input type="number" name="<?php echo $num; ?>" id="<?php echo $num; ?>" value="<?php echo $qty; ?>"></td>
+                    <td><input type="number" name="<?php echo $prod->get_name(); ?>" id="<?php echo $prod->get_name(); ?>" value="<?php echo $qty; ?>"></td>
                 </tr>
                 <?php } ?>
             </tbody>

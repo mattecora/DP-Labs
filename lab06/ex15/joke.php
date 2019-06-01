@@ -1,6 +1,8 @@
 <?php
-    if (isset($_COOKIE["jokenum"]))
-        $jokenum = intval($_COOKIE["jokenum"]);
+    session_start();
+
+    if (isset($_SESSION["jokenum"]))
+        $jokenum = intval($_SESSION["jokenum"]);
     else
         $jokenum = 0;
 ?>
@@ -17,7 +19,7 @@
     <h1>A wonderful joke</h1>
     <?php
         if ($jokenum < 2 && isset($_POST["jokeenter"])) {
-            setcookie("jokenum", $jokenum + 1);
+            $_SESSION["jokenum"] = $jokenum + 1;
     ?>
     <p style="font-style: italic;">Did you hear about the mathematician who’s afraid of negative numbers?</p>
     <p>He’ll stop at nothing to avoid them.</p>

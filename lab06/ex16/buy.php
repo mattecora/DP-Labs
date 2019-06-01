@@ -1,10 +1,11 @@
 <?php
     require("products.php");
 
-    foreach ($products as $num => $prod) {
-        if (!isset($_COOKIE[$num])) {
-            setcookie($num, 0);
-            $_COOKIE[$num] = 0;
+    session_start();
+
+    foreach ($products as $prod) {
+        if (!isset($_SESSION[$prod->get_name()])) {
+            $_SESSION[$prod->get_name()] = 0;
         }
     }
 ?>
@@ -35,8 +36,8 @@
             <tbody>
                 <?php
                     $sum = 0;
-                    foreach ($products as $num => $prod) {
-                        $qty = $_COOKIE[$num];
+                    foreach ($products as $prod) {
+                        $qty = $_SESSION[$prod->get_name()];
                         $sum = $sum + $qty * $prod->get_price();
                 ?>
                 <tr>

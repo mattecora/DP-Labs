@@ -1,9 +1,12 @@
 <?php
     require("products.php");
 
-    foreach ($products as $num => $prod) {
-        setcookie($num, 0);
-        $_COOKIE[$num] = 0;
+    session_start();
+
+    foreach ($products as $prod) {
+        if (!isset($_SESSION[$prod->get_name()])) {
+            $_SESSION[$prod->get_name()] = 0;
+        }
     }
 ?>
 

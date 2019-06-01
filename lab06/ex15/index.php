@@ -1,11 +1,13 @@
 <?php
-    if (isset($_COOKIE["jokenum"]))
-        $jokenum = intval($_COOKIE["jokenum"]);
+    session_start();
+    
+    if (isset($_SESSION["jokenum"]))
+        $jokenum = intval($_SESSION["jokenum"]);
     else
         $jokenum = 0;
     
     if ($jokenum > 0 && isset($_POST["jokeexit"]))
-        setcookie("jokenum", $jokenum - 1);
+        $_SESSION["jokenum"] = $jokenum - 1;
 ?>
 
 <!DOCTYPE html>
