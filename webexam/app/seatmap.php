@@ -9,8 +9,8 @@
             $this->seatmap = array();
 
             // Create the seat map
-            for ($row = 0; $row < ROWS; $row++) {
-                for ($place = 1; $place <= PLACES; $place++) {
+            for ($row = 0; $row < SeatMap::ROWS; $row++) {
+                for ($place = 1; $place <= SeatMap::PLACES; $place++) {
                     $this->seatmap[chr($row + ord('A')) . $place] = new Seat(chr($row + ord('A')) . $place, Seat::FREE, null);
                 }
             }
@@ -34,7 +34,7 @@
 
         public function jsonSerialize() {
             return array_map(function ($data) {
-                return array("status" => $data->getStatus(), "reserver" => $data->getReserver());
+                return $data->getStatus();
             }, $this->seatmap);
         }
     }

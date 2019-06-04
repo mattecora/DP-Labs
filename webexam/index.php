@@ -45,7 +45,7 @@
                                             $seatid = chr($row + ord('A')) . $col;
                                             if (user_is_logged()) {
                                     ?>
-                                        <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="selectSeatHandler('<?= $seatid ?>')">
+                                        <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="seats.requestSelect('<?= $seatid ?>')">
                                             <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
                                         </td>
                                     <?php } else { ?>
@@ -67,7 +67,7 @@
                     
                     <div class="statistics">
                         <h2>Statistics</h2>
-                        <p class="menu-element"><span>Total seats: </span><span id="totalSeats"><?= ROWS*PLACES ?></span></p>
+                        <p class="menu-element"><span>Total seats: </span><span id="totalSeats"><?= SeatMap::ROWS * SeatMap::PLACES ?></span></p>
                         <p class="menu-element"><span>Free seats: </span><span id="freeSeats">0</span></p>
                         <p class="menu-element"><span>Reserved seats: </span><span id="reservedSeats">0</span></p>
                         <p class="menu-element"><span>Purchased seats: </span><span id="purchasedSeats">0</span></p>
@@ -77,19 +77,16 @@
         </div>
     </div>
     
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <script src="js/ajax.js"></script>
+    <script src="js/counter.js"></script>
+    <script src="js/seat_model.js"></script>
+    <script src="js/seat_view.js"></script>
+    <script src="js/seat_controller.js"></script>
+    <script src="js/seat_map.js"></script>
+
     <script>
-        let seats = {
-            <?php
-                for ($row = 0; $row < ROWS; $row++) {
-                    for ($col = 1; $col <= PLACES; $col++) {
-                        $seatid = chr($row + ord('A')) . $col;
-            ?>
-            "<?= $seatid ?>": {"status": <?= $seatmap->getSeat($seatid)->getStatus() ?>, "reserver": "<?= $seatmap->getSeat($seatid)->getReserver() ?>"},
-            <?php
-                    }
-                }
-            ?>
-        };
+        let seats = new SeatMap(<?= json_encode($seatmap) ?>);
 
         <?php if (user_is_logged()) { ?>
             let username = "<?= $_SESSION["username"] ?>";
@@ -97,14 +94,5 @@
             let username = undefined;
         <?php } ?>
     </script>
-
-    <script src="js/jquery-3.4.1.min.js"></script>
-    
-    <script src="js/globals.js"></script>
-    <script src="js/ajax.js"></script>
-    <script src="js/view.js"></script>
-    <script src="js/events.js"></script>
-    
-    <script src="js/index.js"></script>
 </body>
 </html>

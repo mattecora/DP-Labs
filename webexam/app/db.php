@@ -1,5 +1,4 @@
 <?php
-    require_once("globals.php");
     require_once("seat.php");
     require_once("seatmap.php");
     require_once("session.php");
@@ -192,7 +191,7 @@
             
             // If no seat is requested, immediately return
             if (empty($seats))
-                return true;
+                return $this->getSeatStatusAll();
 
             // Begin the transaction
             $this->db->begin_transaction();
@@ -202,7 +201,7 @@
             // Check status of all places
             foreach ($seats as $seat_num) {
                 $seat = $this->getSeatStatusForUpdate($seat_num);
-                if ($seat->getStatus() !== Seat::RESERVED || $seat->getReserver() !== $_SESSION["username"]) {
+                if ($seat->getStatus() !== Seat::SELECTED) {
                     // At least a request is invalid
                     $valid = false;
                 }
