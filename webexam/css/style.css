@@ -1,0 +1,116 @@
+body {
+    text-align: center;
+    background-color: #eeeeee;
+}
+
+h1 {
+    margin: 0px;
+}
+
+span {
+    vertical-align: middle;
+}
+
+table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input {
+    display: block;
+    width: 75%;
+    padding: 0.75em 1.5em;
+    margin: 0.75em auto;
+    text-align: center;
+    border: 1px solid #757575;
+    border-radius: 5px;
+}
+
+input[type=submit] {
+    border: 1px solid transparent;
+    background-color: #1e88e5;
+    color: white;
+}
+
+.menu-element {
+    border-bottom: 1.5px solid #757575;
+    color: black;
+    display: block;
+    text-decoration: none;
+    margin: 0.5em;
+    height: 2em;
+    line-height: 2em;
+}
+
+.icon {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+.icon-big {
+    width: 2em;
+    height: 2em;
+    vertical-align: middle;
+    padding: 0.5em;
+}
+
+.container {
+    border: 1px solid #757575;
+    max-width: 1200px;
+    margin: 1em auto;
+    padding: 25px;
+    background-color: white;
+}
+
+.row {
+    display: flex;
+}
+
+.menu {
+    flex: auto;
+    width: 20%;
+    height: 100%;
+}
+
+.contents {
+    flex: auto;
+    width: 80%;
+    height: 100%;
+}
+
+.seatmap {
+    flex: auto;
+    width: 75%;
+}
+
+.statistics {
+    flex: auto;
+    width: 25%;
+}
+
+.seat {
+    padding: 0.5em;
+    user-select: none;
+    border-radius: 5px;
+}
+
+.seat-clickable {
+    cursor: pointer;
+}
+
+.purchased-seat {
+    background-color: #e53935;
+}
+
+.free-seat {
+    background-color: #43a047;
+}
+
+.reserved-seat {
+    background-color: #fb8c00;
+}
+
+.selected-seat {
+    background-color: #fdd835;
+}
