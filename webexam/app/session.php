@@ -20,12 +20,11 @@
 
     function session_start_timeout() {
         // Start the session
-        if (session_status() == PHP_SESSION_NONE)
+        if (session_status() === PHP_SESSION_NONE)
             session_start();
 
         // User has not logged in
         if (!isset($_SESSION["username"]) || !isset($_SESSION["last"])) {
-            session_unset();
             return NO_SESSION;
         }
 
@@ -34,8 +33,7 @@
 
         // Check time difference
         if ($delta > TIMEOUT) {
-            session_unset();
-            session_destroy();
+            session_logout();
             return SESSION_EXPIRED;
         }
         
@@ -45,7 +43,19 @@
     }
 
     function session_logout() {
-        session_unset();
+        // Unset the session variables
+        $_SESSION = array();
+
+        // If we are using cookies, delete the session cookie
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 3600,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+
+        // Destroy the session
         session_destroy();
     }
 ?>

@@ -29,16 +29,16 @@ class CounterController {
         this.counterView = new CounterView(this.counterModel);
     }
 
-    update(data) {
+    update(seats) {
         this.counterModel.reset();
 
         // Check status of all seats
-        for (let seat in data) {
-            if (data[seat] === STATUS_FREE)
+        for (let seat in seats) {
+            if (seats[seat].seatModel.getStatus() === STATUS_FREE)
                 this.counterModel.free++;
-            else if (data[seat] === STATUS_RESERVED || data[seat] === STATUS_SELECTED)
+            else if (seats[seat].seatModel.getStatus() === STATUS_RESERVED || seats[seat].seatModel.getStatus() === STATUS_SELECTED)
                 this.counterModel.reserved++;
-            else if (data[seat] === STATUS_PURCHASED)
+            else if (seats[seat].seatModel.getStatus() === STATUS_PURCHASED)
                 this.counterModel.purchased++;
         }
 

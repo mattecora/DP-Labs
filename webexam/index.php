@@ -80,10 +80,8 @@
     <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/ajax.js"></script>
     <script src="js/counter.js"></script>
-    <script src="js/seat_model.js"></script>
-    <script src="js/seat_view.js"></script>
-    <script src="js/seat_controller.js"></script>
-    <script src="js/seat_map.js"></script>
+    <script src="js/seat.js"></script>
+    <script src="js/seatmap.js"></script>
 
     <script>
         let seats = new SeatMap(<?= json_encode($seatmap) ?>);

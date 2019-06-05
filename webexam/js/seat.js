@@ -1,3 +1,31 @@
+const STATUS_FREE = 0;
+const STATUS_RESERVED = 1;
+const STATUS_PURCHASED = 2;
+const STATUS_SELECTED = 3;
+
+class SeatModel {
+    constructor(seatNum, status) {
+        this.seatNum = seatNum;
+        this.status = status;
+    }
+
+    getSeatNum() {
+        return this.seatNum;
+    }
+
+    getStatus() {
+        return this.status;
+    }
+
+    setSeatNum(seatNum) {
+        this.seatNum = seatNum;
+    }
+
+    setStatus(status) {
+        this.status = status;
+    }
+}
+
 class SeatView {
     constructor(seatModel, seatElement) {
         this.seatModel = seatModel;
@@ -18,5 +46,18 @@ class SeatView {
             this.seatElement.addClass("purchased-seat");
         else if (this.seatModel.getStatus() === STATUS_SELECTED)
             this.seatElement.addClass("selected-seat");
+    }
+}
+
+class SeatController {
+    constructor (seatModel, seatView) {
+        this.seatModel = seatModel;
+        this.seatView = seatView;
+    }
+
+    update(status) {
+        // Update the model and render the view
+        this.seatModel.setStatus(status);
+        this.seatView.render(status);
     }
 }
