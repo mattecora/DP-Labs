@@ -49,7 +49,12 @@
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
             $stmt->fetch();
-            $seat = new Seat($seat_num, $status, $reserver);
+
+            if (isset($status)) {
+                $seat = new Seat($seat_num, $status, $reserver);
+            } else {
+                $seat = new Seat($seat_num, Seat::FREE, null);
+            }
     
             return $seat;
         }
@@ -72,7 +77,12 @@
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
             $stmt->fetch();
-            $seat = new Seat($seat_num, $status, $reserver);
+
+            if (isset($status)) {
+                $seat = new Seat($seat_num, $status, $reserver);
+            } else {
+                $seat = new Seat($seat_num, Seat::FREE, null);
+            }
     
             return $seat;
         }
@@ -123,8 +133,13 @@
             }
     
             // Prepare the query
-            $stmt = $this->db->prepare("UPDATE airplane SET status = 1, reserver = ? WHERE seat = ?");
-            $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
+            if ($seat->getStatus() === Seat::RESERVED) {
+                $stmt = $this->db->prepare("UPDATE airplane reserver = ? WHERE seat = ?");
+                $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
+            } else {
+                $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 1, ?)");
+                $stmt->bind_param("ss", $seat_num, $_SESSION["username"]);
+            }
             
             // Execute the query and check results
             $res = $stmt->execute();
@@ -163,7 +178,7 @@
             }
     
             // Prepare the query
-            $stmt = $this->db->prepare("UPDATE airplane SET status = 0, reserver = null WHERE seat = ?");
+            $stmt = $this->db->prepare("DELETE FROM airplane WHERE seat = ?");
             $stmt->bind_param("s", $seat_num);
             
             // Execute the query and check results
@@ -211,15 +226,14 @@
                 // Set places as purchased
                 $stmt = $this->db->prepare("UPDATE airplane SET status = 2 WHERE status = 1 AND reserver = ?");
                 $stmt->bind_param("s", $_SESSION["username"]);
-                $stmt->execute();
             } else {
                 // Free all places
-                $stmt = $this->db->prepare("UPDATE airplane SET status = 0, reserver= '' WHERE status = 1 AND reserver = ?");
+                $stmt = $this->db->prepare("DELETE FROM airplane WHERE status = 1 AND reserver = ?");
                 $stmt->bind_param("s", $_SESSION["username"]);
-                $stmt->execute();
             }
 
             // Commit the transaction
+            $stmt->execute();
             $this->db->commit();
     
             return $this->getSeatStatusAll();
