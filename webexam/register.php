@@ -1,7 +1,7 @@
 <?php
-    require_once("app/enforce_https.php");
-    require_once("app/db.php");
-    require_once("app/session.php");
+    require_once "app/enforce_https.php";
+    require_once "app/db.php";
+    require_once "app/session.php";
 
     if (isset($_POST["username"]) && isset($_POST["password"])) {
         // Open the DB and add new user
@@ -31,12 +31,12 @@
 </head>
 <body>
     <div class="container">
-        <?php require_once("components/header.php"); ?>
+        <?php require_once "components/header.php"; ?>
     </div>
 
-    <div class="container">
+    <div id="main" class="container hidden">
         <div class="row">
-            <?php require_once("components/menu.php"); ?>
+            <?php require_once"components/menu.php"; ?>
 
             <div class="contents">
                 <h2>Register</h2>
@@ -50,6 +50,8 @@
     </div>
 
     <?php if (isset($creation_failed)) echo "<script>alert(\"Cannot create user!\");</script>"; ?>
+
+    <?php require_once "components/jscheck.php"; ?>
 
     <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/login.js"></script>

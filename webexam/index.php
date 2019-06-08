@@ -1,9 +1,9 @@
 <?php
-    require_once("app/enforce_https.php");
+    require_once "app/enforce_https.php";
 
-    require_once("app/db.php");
-    require_once("app/seatmap.php");
-    require_once("app/session.php");
+    require_once "app/db.php";
+    require_once "app/seatmap.php";
+    require_once "app/session.php";
 
     $db = new AirplaneDatabase();
     $seatmap = $db->getSeatStatusAll();
@@ -26,12 +26,12 @@
     ?>
 
     <div class="container">
-        <?php require_once("components/header.php"); ?>
+        <?php require_once "components/header.php"; ?>
     </div>
-    <div class="container">
+
+    <div id="main" class="container hidden">
         <div class="row">
-        
-            <?php require_once("components/menu.php"); ?>
+            <?php require_once "components/menu.php"; ?>
 
             <div class="contents">
                 <div class="row">
@@ -76,6 +76,8 @@
             </div>
         </div>
     </div>
+
+    <?php require_once "components/jscheck.php"; ?>
     
     <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/ajax.js"></script>

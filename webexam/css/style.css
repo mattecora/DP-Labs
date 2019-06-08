@@ -32,6 +32,10 @@ input[type=submit] {
     color: white;
 }
 
+.hidden {
+    display: none;
+}
+
 .menu-element {
     border-bottom: 1.5px solid #757575;
     color: black;
