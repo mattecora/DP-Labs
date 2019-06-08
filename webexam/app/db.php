@@ -134,7 +134,7 @@
     
             // Prepare the query
             if ($seat->getStatus() === Seat::RESERVED) {
-                $stmt = $this->db->prepare("UPDATE airplane reserver = ? WHERE seat = ?");
+                $stmt = $this->db->prepare("UPDATE airplane SET reserver = ? WHERE seat = ?");
                 $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
             } else {
                 $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 1, ?)");
