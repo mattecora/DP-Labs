@@ -35,7 +35,7 @@ class SeatMap {
         }
         
         // Check if the seat has been purchased in the meantime
-        getSeatStatus(this.seats[seat].seatModel.getSeatNum(), (data, status, xhr) => {
+        getSeatStatus(this.seats[seat].seatModel.getSeatNum(), data => {
             this.seats[seat].update(data[this.seats[seat].seatModel.getSeatNum()]);
             
             if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
@@ -50,7 +50,7 @@ class SeatMap {
             // Check if the seat is selected or not
             if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED) {
                 // Seat is selected and must be freed
-                freeSeat(this.seats[seat].seatModel.getSeatNum(), (data2, status2, xhr2) => {
+                freeSeat(this.seats[seat].seatModel.getSeatNum(), data2 => {
                     // Alert and update model and view
                     this.seats[seat].update(STATUS_FREE);
                     alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " freed!");
@@ -60,7 +60,7 @@ class SeatMap {
                 });
             } else {
                 // Seat is free (or reserved by other) and must be selected
-                reserveSeat(this.seats[seat].seatModel.getSeatNum(), (data2, status2, xhr2) => {
+                reserveSeat(this.seats[seat].seatModel.getSeatNum(), data2 => {
                     // Alert and update model and view
                     this.seats[seat].update(STATUS_SELECTED);
                     alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " selected!");
@@ -74,7 +74,7 @@ class SeatMap {
 
     requestUpdate() {
         // Retrieve the seat map
-        getSeatStatusAll((data, status, xhr) => {
+        getSeatStatusAll(data => {
             // Update the seat models and views
             this.update(data);
         });
@@ -90,7 +90,7 @@ class SeatMap {
         }
 
         // Request the purchase
-        purchaseSeats(toPurchase, (data, status, xhr) => {
+        purchaseSeats(toPurchase, data => {
             // Update the seat models and views
             this.update(data);
         });

@@ -86,7 +86,7 @@
     <script src="js/seatmap.js"></script>
 
     <script>
-        let seats = new SeatMap(<?= json_encode($seatmap) ?>);
+        let seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
 
         <?php if (user_is_logged()) { ?>
             let username = "<?= $_SESSION["username"] ?>";

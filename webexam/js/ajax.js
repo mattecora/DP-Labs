@@ -7,13 +7,20 @@ function getSeatStatus(seat, callback) {
             seat: seat
         },
         dataType: "json",
-        success: callback,
+        success: (response, status, xhr) => {
+            if (response["data"]) {
+                callback(response["data"]);
+            }
+            if (response["message"]) {
+                alert(response["message"]);
+            }
+        },
         error: (xhr, status, error) => {
-            if (error === "Unauthorized") {
+            if (xhr.status === 400) {
+                alert("Your request was invalid!");
+            } else if (xhr.status === 401) {
                 alert("Your session has expired!");
                 window.location = "index.php";
-            } else {
-                alert("Your request was invalid!");
             }
         }
     });
@@ -23,13 +30,20 @@ function getSeatStatusAll(callback) {
     $.ajax("api/get_seat_status.php", {
         method: "GET",
         dataType: "json",
-        success: callback,
+        success: (response, status, xhr) => {
+            if (response["data"]) {
+                callback(response["data"]);
+            }
+            if (response["message"]) {
+                alert(response["message"]);
+            }
+        },
         error: (xhr, status, error) => {
-            if (error === "Unauthorized") {
+            if (xhr.status === 400) {
+                alert("Your request was invalid!");
+            } else if (xhr.status === 401) {
                 alert("Your session has expired!");
                 window.location = "index.php";
-            } else {
-                alert("Your request was invalid!");
             }
         }
     });
@@ -42,13 +56,20 @@ function reserveSeat(seat, callback) {
             seat: seat
         },
         dataType: "json",
-        success: callback,
+        success: (response, status, xhr) => {
+            if (response["data"]) {
+                callback(response["data"]);
+            }
+            if (response["message"]) {
+                alert(response["message"]);
+            }
+        },
         error: (xhr, status, error) => {
-            if (error === "Unauthorized") {
+            if (xhr.status === 400) {
+                alert("Your request was invalid!");
+            } else if (xhr.status === 401) {
                 alert("Your session has expired!");
                 window.location = "index.php";
-            } else {
-                alert("Your request was invalid!");
             }
         }
     });
@@ -61,13 +82,20 @@ function freeSeat(seat, callback) {
             seat: seat
         },
         dataType: "json",
-        success: callback,
+        success: (response, status, xhr) => {
+            if (response["data"]) {
+                callback(response["data"]);
+            }
+            if (response["message"]) {
+                alert(response["message"]);
+            }
+        },
         error: (xhr, status, error) => {
-            if (error === "Unauthorized") {
+            if (xhr.status === 400) {
+                alert("Your request was invalid!");
+            } else if (xhr.status === 401) {
                 alert("Your session has expired!");
                 window.location = "index.php";
-            } else {
-                alert("Your request was invalid!");
             }
         }
     });
@@ -80,13 +108,20 @@ function purchaseSeats(seats, callback) {
             seats: seats
         },
         dataType: "json",
-        success: callback,
+        success: (response, status, xhr) => {
+            if (response["data"]) {
+                callback(response["data"]);
+            }
+            if (response["message"]) {
+                alert(response["message"]);
+            }
+        },
         error: (xhr, status, error) => {
-            if (error === "Unauthorized") {
+            if (xhr.status === 400) {
+                alert("Your request was invalid!");
+            } else if (xhr.status === 401) {
                 alert("Your session has expired!");
                 window.location = "index.php";
-            } else {
-                alert("Your request was invalid!");
             }
         }
     });

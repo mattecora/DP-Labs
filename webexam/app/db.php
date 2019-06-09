@@ -1,13 +1,14 @@
 <?php
-    require_once("seat.php");
-    require_once("seatmap.php");
-    require_once("session.php");
+    require_once "message.php";
+    require_once "seat.php";
+    require_once "seatmap.php";
+    require_once "session.php";
 
     class AirplaneDatabase {
         private const HOST = "localhost";
         private const USER = "root";
         private const PASS = "";
-        private const DBNM = "dpexam";
+        private const NAME = "dpexam";
 
         private $db;
 
@@ -16,11 +17,10 @@
          * Creates a new mysqli object and checks for connection errors.
          */
         public function __construct() {
-            $this->db = new mysqli(AirplaneDatabase::HOST, AirplaneDatabase::USER, AirplaneDatabase::PASS, AirplaneDatabase::DBNM);
+            $this->db = new mysqli(AirplaneDatabase::HOST, AirplaneDatabase::USER, AirplaneDatabase::PASS, AirplaneDatabase::NAME);
         
-            if ($this->db->connect_error) {
+            if ($this->db->connect_error)
                 die("Database connect error (" . $this->db->connect_errno . ") " . $this->db->connect_error);
-            }
         }
 
         /**
@@ -41,22 +41,19 @@
             
             // Execute the query and check results
             $res = $stmt->execute();
-            if (!$res) {
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
-                return false;
-            }
+            if (!$res)
+                return new Message(false, "Database error: " . $this->db->errno, null);
 
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
             $stmt->fetch();
 
-            if (isset($status)) {
+            if (isset($status))
                 $seat = new Seat($seat_num, $status, $reserver);
-            } else {
+            else
                 $seat = new Seat($seat_num, Seat::FREE, null);
-            }
     
-            return $seat;
+            return new Message(true, null, $seat);
         }
 
         /**
@@ -69,22 +66,19 @@
             
             // Execute the query and check results
             $res = $stmt->execute();
-            if (!$res) {
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
-                return false;
-            }
+            if (!$res)
+                return new Message(false, "Database error: " . $this->db->errno, null);
 
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
             $stmt->fetch();
 
-            if (isset($status)) {
+            if (isset($status))
                 $seat = new Seat($seat_num, $status, $reserver);
-            } else {
+            else
                 $seat = new Seat($seat_num, Seat::FREE, null);
-            }
     
-            return $seat;
+            return new Message(true, null, $seat);
         }
     
         /**
@@ -96,18 +90,15 @@
             // Run the query on the DB
             $stmt = $this->db->prepare("SELECT * FROM airplane");
             $res = $stmt->execute();
-            if (!$res) {
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
-                return false;
-            }
+            if (!$res)
+                return new Message(false, "Database error: " . $this->db->errno, null);
     
             // Loop through the results and fill the seat map
             $stmt->bind_result($seat_num, $status, $reserver);
-            while ($stmt->fetch()) {
+            while ($stmt->fetch())
                 $seatmap->updateSeat(new Seat($seat_num, $status, $reserver));
-            }
     
-            return $seatmap;
+            return new Message(true, null, $seatmap);
         }
 
         /**
@@ -117,23 +108,23 @@
             // Check that the user has logged in
             session_start_timeout();
             if (!user_is_logged())
-                die("User is not logged in");
+                return new Message(false, "User is not logged in", null);
 
             // Begin the transaction
             $this->db->begin_transaction();
             
             // Check the current seat status
             $seat = $this->getSeatStatusForUpdate($seat_num);
-            if ($seat == false) {
-                $this->db->rollback();
-                return false;
-            } else if ($seat->getStatus() === Seat::INVALID || $seat->getStatus() === Seat::PURCHASED) {
+            if ($seat->getSuccess() == false) {
                 $this->db->rollback();
                 return $seat;
+            } else if ($seat->getData()->getStatus() === Seat::PURCHASED || $seat->getData()->getStatus() === Seat::SELECTED) {
+                $this->db->rollback();
+                return new Message(false, "Invalid seat selected", null);
             }
     
             // Prepare the query
-            if ($seat->getStatus() === Seat::RESERVED) {
+            if ($seat->getData()->getStatus() === Seat::RESERVED) {
                 $stmt = $this->db->prepare("UPDATE airplane SET reserver = ? WHERE seat = ?");
                 $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
             } else {
@@ -145,8 +136,7 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
-                return false;
+                return new Message(false, "Database error: " . $this->db->errno, null);
             }
 
             // Commit the transaction
@@ -162,19 +152,19 @@
             // Check that the user has logged in
             session_start_timeout();
             if (!user_is_logged())
-                die("User is not logged in");
+                return new Message(false, "User is not logged in", null);
 
             // Begin the transaction
             $this->db->begin_transaction();
             
             // Check the current seat status
             $seat = $this->getSeatStatusForUpdate($seat_num);
-            if ($seat == false) {
-                $this->db->rollback();
-                return false;
-            } else if ($seat->getStatus() === Seat::INVALID || $seat->getStatus() === Seat::PURCHASED || $seat->getReserver() !== $_SESSION["username"]) {
+            if ($seat->getSuccess() == false) {
                 $this->db->rollback();
                 return $seat;
+            } else if ($seat->getData()->getStatus() !== Seat::SELECTED) {
+                $this->db->rollback();
+                return new Message(false, "Invalid seat selected", null);
             }
     
             // Prepare the query
@@ -185,8 +175,7 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
-                return false;
+                return new Message(false, "Database error: " . $this->db->errno, null);
             }
 
             // Commit the transaction
@@ -202,7 +191,7 @@
             // Check that the user has logged in
             session_start_timeout();
             if (!user_is_logged())
-                die("User is not logged in");
+                return new Message(false, "User is not logged in", null);
             
             // If no seat is requested, immediately return
             if (empty($seats))
@@ -211,18 +200,16 @@
             // Begin the transaction
             $this->db->begin_transaction();
 
-            $valid = true;
+            $invalid_seats = array();
 
             // Check status of all places
             foreach ($seats as $seat_num) {
                 $seat = $this->getSeatStatusForUpdate($seat_num);
-                if ($seat->getStatus() !== Seat::SELECTED) {
-                    // At least a request is invalid
-                    $valid = false;
-                }
+                if ($seat->getData()->getStatus() !== Seat::SELECTED)
+                    $invalid_seats[] = $seat->getData()->getSeatNum();
             }
 
-            if ($valid) {
+            if (empty($invalid_seats)) {
                 // Set places as purchased
                 $stmt = $this->db->prepare("UPDATE airplane SET status = 2 WHERE status = 1 AND reserver = ?");
                 $stmt->bind_param("s", $_SESSION["username"]);
@@ -235,8 +222,13 @@
             // Commit the transaction
             $stmt->execute();
             $this->db->commit();
-    
-            return $this->getSeatStatusAll();
+
+            if (empty($invalid_seats))
+                $msg = new Message(true, null, $this->getSeatStatusAll()->getData());
+            else
+                $msg = new Message(false, "Invalid seats selected: " . implode(", ", $invalid_seats), $this->getSeatStatusAll()->getData());
+
+            return $msg;
         }
 
         /**
@@ -265,7 +257,6 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
                 return false;
             }
 
@@ -287,7 +278,6 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                //die("Database error (" . $this->db->errno . ") " . $this->db->error);
                 return false;
             }
 

@@ -1,14 +1,8 @@
+/* General declarations */
+
 body {
     text-align: center;
     background-color: #eeeeee;
-}
-
-h1 {
-    margin: 0px;
-}
-
-span {
-    vertical-align: middle;
 }
 
 table {
@@ -32,23 +26,10 @@ input[type=submit] {
     color: white;
 }
 
-.hidden {
-    display: none;
-}
+/* Header section */
 
-.menu-element {
-    border-bottom: 1.5px solid #757575;
-    color: black;
-    display: block;
-    text-decoration: none;
-    margin: 0.5em;
-    height: 2em;
-    line-height: 2em;
-}
-
-.icon {
-    width: 1em;
-    height: 1em;
+h1 {
+    margin: 0px;
     vertical-align: middle;
 }
 
@@ -57,6 +38,12 @@ input[type=submit] {
     height: 2em;
     vertical-align: middle;
     padding: 0.5em;
+}
+
+/* Main section */
+
+.hidden {
+    display: none;
 }
 
 .container {
@@ -71,11 +58,35 @@ input[type=submit] {
     display: flex;
 }
 
+/* Menu section */
+
 .menu {
     flex: auto;
     width: 20%;
     height: 100%;
 }
+
+.menu-element {
+    border-bottom: 1px solid #757575;
+    color: black;
+    display: block;
+    text-decoration: none;
+    margin: 0.5em;
+    height: 2em;
+    line-height: 2em;
+}
+
+span {
+    vertical-align: middle;
+}
+
+.icon {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+/* Contents section */
 
 .contents {
     flex: auto;

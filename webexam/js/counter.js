@@ -1,5 +1,5 @@
 class CounterModel {
-    constructor(total) {
+    constructor() {
         this.reset();
     }
 
@@ -7,6 +7,18 @@ class CounterModel {
         this.free = 0;
         this.reserved = 0;
         this.purchased = 0;
+    }
+
+    addFree() {
+        this.free++;
+    }
+
+    addReserved() {
+        this.reserved++;
+    }
+
+    addPurchased() {
+        this.purchased++;
     }
 }
 
@@ -35,11 +47,11 @@ class CounterController {
         // Check status of all seats
         for (let seat in seats) {
             if (seats[seat].seatModel.getStatus() === STATUS_FREE)
-                this.counterModel.free++;
+                this.counterModel.addFree();
             else if (seats[seat].seatModel.getStatus() === STATUS_RESERVED || seats[seat].seatModel.getStatus() === STATUS_SELECTED)
-                this.counterModel.reserved++;
+                this.counterModel.addReserved();
             else if (seats[seat].seatModel.getStatus() === STATUS_PURCHASED)
-                this.counterModel.purchased++;
+                this.counterModel.addPurchased();
         }
 
         // Update view
