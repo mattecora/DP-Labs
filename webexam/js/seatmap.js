@@ -30,51 +30,29 @@ class SeatMap {
     
         // Check if the seat is already purchased
         if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
-            alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " has already been purchased!");
+            alert("Seat " + seat + " has already been purchased");
             return;
         }
-        
-        // Check if the seat has been purchased in the meantime
-        getSeatStatus(this.seats[seat].seatModel.getSeatNum(), data => {
-            this.seats[seat].update(data[this.seats[seat].seatModel.getSeatNum()]);
-            
-            if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
-                // Alert and update model and view
-                alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " has already been purchased!");
-                
-                // Update counters
-                this.counter.update(this.seats);
-                return;
-            }
-    
-            // Check if the seat is selected or not
-            if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED) {
-                // Seat is selected and must be freed
-                freeSeat(this.seats[seat].seatModel.getSeatNum(), data2 => {
-                    // Alert and update model and view
-                    this.seats[seat].update(STATUS_FREE);
-                    alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " freed!");
 
-                    // Update counters
-                    this.counter.update(this.seats);
-                });
-            } else {
-                // Seat is free (or reserved by other) and must be selected
-                reserveSeat(this.seats[seat].seatModel.getSeatNum(), data2 => {
-                    // Alert and update model and view
-                    this.seats[seat].update(STATUS_SELECTED);
-                    alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " selected!");
+        // Try to purchase the seat
+        AJAX.reserveSeat(seat, data => {
+            // Update model and view
+            this.seats[seat].update(data[seat]);
 
-                    // Update counters
-                    this.counter.update(this.seats);
-                });
-            }
+            // Check the current status and alert accordingly
+            if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED)
+                alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " selected!");
+            else
+            alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " freed!");
+
+            // Update counters
+            this.counter.update(this.seats);
         });
     }
 
     requestUpdate() {
         // Retrieve the seat map
-        getSeatStatusAll(data => {
+        AJAX.getSeatStatusAll(data => {
             // Update the seat models and views
             this.update(data);
         });
@@ -90,7 +68,7 @@ class SeatMap {
         }
 
         // Request the purchase
-        purchaseSeats(toPurchase, data => {
+        AJAX.purchaseSeats(toPurchase, data => {
             // Update the seat models and views
             this.update(data);
         });

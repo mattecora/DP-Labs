@@ -118,16 +118,22 @@
             if ($seat->getSuccess() == false) {
                 $this->db->rollback();
                 return $seat;
-            } else if ($seat->getData()->getStatus() === Seat::PURCHASED || $seat->getData()->getStatus() === Seat::SELECTED) {
+            } else if ($seat->getData()->getStatus() === Seat::PURCHASED) {
                 $this->db->rollback();
-                return new Message(false, "Invalid seat selected", null);
+                return new Message(false, "Seat $seat_num has already been purchased", null);
             }
     
             // Prepare the query
-            if ($seat->getData()->getStatus() === Seat::RESERVED) {
+            if ($seat->getData()->getStatus() === Seat::SELECTED) {
+                // Seat selected by the user, delete reservation
+                $stmt = $this->db->prepare("DELETE FROM airplane WHERE seat = ?");
+                $stmt->bind_param("s", $seat_num);
+            } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
+                // Seat selected by another user, update reservation
                 $stmt = $this->db->prepare("UPDATE airplane SET reserver = ? WHERE seat = ?");
                 $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
             } else {
+                // Seat free, insert reservation
                 $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 1, ?)");
                 $stmt->bind_param("ss", $seat_num, $_SESSION["username"]);
             }
@@ -136,46 +142,7 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                return new Message(false, "Database error: " . $this->db->errno, null);
-            }
-
-            // Commit the transaction
-            $this->db->commit();
-    
-            return $this->getSeatStatus($seat_num);
-        }
-
-        /**
-         * Frees a selected seat in the airplane.
-         */
-        public function freeSeat($seat_num) {
-            // Check that the user has logged in
-            session_start_timeout();
-            if (!user_is_logged())
-                return new Message(false, "User is not logged in", null);
-
-            // Begin the transaction
-            $this->db->begin_transaction();
-            
-            // Check the current seat status
-            $seat = $this->getSeatStatusForUpdate($seat_num);
-            if ($seat->getSuccess() == false) {
-                $this->db->rollback();
-                return $seat;
-            } else if ($seat->getData()->getStatus() !== Seat::SELECTED) {
-                $this->db->rollback();
-                return new Message(false, "Invalid seat selected", null);
-            }
-    
-            // Prepare the query
-            $stmt = $this->db->prepare("DELETE FROM airplane WHERE seat = ?");
-            $stmt->bind_param("s", $seat_num);
-            
-            // Execute the query and check results
-            $res = $stmt->execute();
-            if (!$res) {
-                $this->db->rollback();
-                return new Message(false, "Database error: " . $this->db->errno, null);
+                return new Message(false, "Database error: " . $this->db->error, null);
             }
 
             // Commit the transaction
