@@ -1,27 +1,27 @@
-class SeatMap {
-    constructor(data) {
-        this.seats = {};
-        this.counter = new CounterController();
+function SeatMap(data) {
+    this.seats = {};
+    this.counter = new CounterController();
 
-        for (let seat in data) {
-            let seatModel = new SeatModel(seat, data[seat]);
-            let seatView = new SeatView(seatModel, $("#" + seat));
-            this.seats[seat] = new SeatController(seatModel, seatView);
-        }
-
-        this.counter.update(this.seats);
+    for (var seat in data) {
+        var seatModel = new SeatModel(seat, data[seat]);
+        var seatView = new SeatView(seatModel, $("#" + seat));
+        this.seats[seat] = new SeatController(seatModel, seatView);
     }
 
-    update(seats) {
+    this.update = function(seats) {
         // Update seats
-        for (let seat in this.seats)
+        for (var seat in this.seats)
             this.seats[seat].update(seats[seat]);
         
         // Update counters
         this.counter.update(this.seats);
-    }
+    };
 
-    requestSelect(seat) {
+    this.counter.update(this.seats);
+
+    this.requestSelect = function(seat) {
+        var obj = this;
+
         // Check if the user is logged in
         if (username === undefined) {
             alert("Seat reservation is for registered users only!");
@@ -35,42 +35,39 @@ class SeatMap {
         }
 
         // Try to purchase the seat
-        AJAX.reserveSeat(seat, data => {
+        ajaxReserveSeat(seat, function(data) {
             // Update model and view
-            this.seats[seat].update(data[seat]);
-
-            // Check the current status and alert accordingly
-            if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED)
-                alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " selected!");
-            else
-            alert("Seat " + this.seats[seat].seatModel.getSeatNum() + " freed!");
+            obj.seats[seat].update(data[seat]);
 
             // Update counters
-            this.counter.update(this.seats);
+            obj.counter.update(obj.seats);
         });
-    }
+    };
 
-    requestUpdate() {
+    this.requestUpdate = function() {
+        var obj = this;
+
         // Retrieve the seat map
-        AJAX.getSeatStatusAll(data => {
+        ajaxGetSeatStatusAll(function(data) {
             // Update the seat models and views
-            this.update(data);
+            obj.update(data);
         });
-    }
+    };
 
-    requestPurchase() {
-        let toPurchase = [];
+    this.requestPurchase = function() {
+        var obj = this;
+        var toPurchase = [];
 
         // Check all seats to purchase
-        for (let seat in this.seats) {
+        for (var seat in this.seats) {
             if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED)
                 toPurchase.push(this.seats[seat].seatModel.getSeatNum());
         }
 
         // Request the purchase
-        AJAX.purchaseSeats(toPurchase, data => {
+        ajaxPurchaseSeats(toPurchase, function(data) {
             // Update the seat models and views
-            this.update(data);
+            obj.update(data);
         });
-    }
+    };
 }

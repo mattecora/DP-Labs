@@ -3,37 +3,32 @@ const STATUS_RESERVED = 1;
 const STATUS_PURCHASED = 2;
 const STATUS_SELECTED = 3;
 
-class SeatModel {
-    constructor(seatNum, status) {
-        this.seatNum = seatNum;
-        this.status = status;
-    }
+function SeatModel(seatNum, status) {
+    this.seatNum = seatNum;
+    this.status = status;
 
-    getSeatNum() {
+    this.getSeatNum = function() {
         return this.seatNum;
-    }
+    };
 
-    getStatus() {
+    this.getStatus = function() {
         return this.status;
-    }
+    };
 
-    setSeatNum(seatNum) {
+    this.setSeatNum = function(seatNum) {
         this.seatNum = seatNum;
-    }
+    };
 
-    setStatus(status) {
+    this.setStatus = function(status) {
         this.status = status;
-    }
+    };
 }
 
-class SeatView {
-    constructor(seatModel, seatElement) {
-        this.seatModel = seatModel;
-        this.seatElement = seatElement;
-        this.render();
-    }
+function SeatView(seatModel, seatElement) {
+    this.seatModel = seatModel;
+    this.seatElement = seatElement;
 
-    render() {
+    this.render = function() {
         // Remove all classes
         this.seatElement.removeClass("free-seat reserved-seat purchased-seat selected-seat");
         
@@ -46,18 +41,18 @@ class SeatView {
             this.seatElement.addClass("purchased-seat");
         else if (this.seatModel.getStatus() === STATUS_SELECTED)
             this.seatElement.addClass("selected-seat");
-    }
+    };
+
+    this.render();
 }
 
-class SeatController {
-    constructor (seatModel, seatView) {
-        this.seatModel = seatModel;
-        this.seatView = seatView;
-    }
+function SeatController(seatModel, seatView) {
+    this.seatModel = seatModel;
+    this.seatView = seatView;
 
-    update(status) {
+    this.update = function(status) {
         // Update the model and render the view
         this.seatModel.setStatus(status);
         this.seatView.render(status);
-    }
+    };
 }

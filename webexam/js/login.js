@@ -2,8 +2,8 @@
 
 function checkRegistration() {
     // Read username and password
-    let username = $("#username").val();
-    let password = $("#password").val();
+    var username = $("#username").val();
+    var password = $("#password").val();
 
     // Check username is a valid email
     if (!/^[a-zA-z0-9]+@[a-zA-z0-9]+\.[a-zA-z0-9]+$/.test(username)) {

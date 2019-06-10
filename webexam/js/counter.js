@@ -1,51 +1,48 @@
-class CounterModel {
-    constructor() {
-        this.reset();
-    }
+function CounterModel() {
+    this.free = 0;
+    this.reserved = 0;
+    this.purchased = 0;
 
-    reset() {
+    this.reset = function() {
         this.free = 0;
         this.reserved = 0;
         this.purchased = 0;
-    }
+    };
 
-    addFree() {
+    this.addFree = function() {
         this.free++;
-    }
+    };
 
-    addReserved() {
+    this.addReserved = function() {
         this.reserved++;
-    }
+    };
 
-    addPurchased() {
+    this.addPurchased = function() {
         this.purchased++;
-    }
+    };
 }
 
-class CounterView {
-    constructor(counterModel) {
-        this.counterModel = counterModel;
-        this.render();
-    }
+function CounterView(counterModel) {
+    this.counterModel = counterModel;
 
-    render() {
+    this.render = function() {
         $("#freeSeats").html(this.counterModel.free);
         $("#reservedSeats").html(this.counterModel.reserved);
         $("#purchasedSeats").html(this.counterModel.purchased);
-    }
+    };
+
+    this.render();
 }
 
-class CounterController {
-    constructor() {
-        this.counterModel = new CounterModel();
-        this.counterView = new CounterView(this.counterModel);
-    }
+function CounterController() {
+    this.counterModel = new CounterModel();
+    this.counterView = new CounterView(this.counterModel);
 
-    update(seats) {
+    this.update = function(seats) {
         this.counterModel.reset();
 
         // Check status of all seats
-        for (let seat in seats) {
+        for (var seat in seats) {
             if (seats[seat].seatModel.getStatus() === STATUS_FREE)
                 this.counterModel.addFree();
             else if (seats[seat].seatModel.getStatus() === STATUS_RESERVED || seats[seat].seatModel.getStatus() === STATUS_SELECTED)
@@ -56,5 +53,5 @@ class CounterController {
 
         // Update view
         this.counterView.render();
-    }
+    };
 }

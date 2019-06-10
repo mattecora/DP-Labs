@@ -86,12 +86,12 @@
     <script src="js/seatmap.js"></script>
 
     <script>
-        let seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
+        var seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
 
         <?php if (user_is_logged()) { ?>
-            let username = "<?= $_SESSION["username"] ?>";
+            var username = "<?= $_SESSION["username"] ?>";
         <?php } else { ?>
-            let username = undefined;
+            var username = undefined;
         <?php } ?>
     </script>
 </body>
