@@ -120,7 +120,7 @@
                 return $seat;
             } else if ($seat->getData()->getStatus() === Seat::PURCHASED) {
                 $this->db->rollback();
-                return new Message(false, "Seat $seat_num has already been purchased", null);
+                return new Message(false, "Seat $seat_num has already been purchased", $seat->getData());
             }
     
             // Prepare the query
@@ -128,14 +128,17 @@
                 // Seat selected by the user, delete reservation
                 $stmt = $this->db->prepare("DELETE FROM airplane WHERE seat = ?");
                 $stmt->bind_param("s", $seat_num);
+                $msg = "Seat $seat_num freed";
             } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
                 // Seat selected by another user, update reservation
                 $stmt = $this->db->prepare("UPDATE airplane SET reserver = ? WHERE seat = ?");
                 $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
+                $msg = "Seat $seat_num selected from another user";
             } else {
                 // Seat free, insert reservation
                 $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 1, ?)");
                 $stmt->bind_param("ss", $seat_num, $_SESSION["username"]);
+                $msg = "Seat $seat_num selected";
             }
             
             // Execute the query and check results
@@ -148,7 +151,7 @@
             // Commit the transaction
             $this->db->commit();
     
-            return $this->getSeatStatus($seat_num);
+            return new Message(true, $msg, $this->getSeatStatus($seat_num)->getData());
         }
 
         /**
@@ -191,11 +194,9 @@
             $this->db->commit();
 
             if (empty($invalid_seats))
-                $msg = new Message(true, null, $this->getSeatStatusAll()->getData());
-            else
-                $msg = new Message(false, "Invalid seats selected: " . implode(", ", $invalid_seats), $this->getSeatStatusAll()->getData());
-
-            return $msg;
+                return new Message(true, "Seats " . implode(", ", $seats) . " purchased", $this->getSeatStatusAll()->getData());
+            
+            return new Message(false, "Invalid seats selected: " . implode(", ", $invalid_seats), $this->getSeatStatusAll()->getData());
         }
 
         /**
