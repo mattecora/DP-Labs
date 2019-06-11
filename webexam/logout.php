@@ -1,3 +1,9 @@
+<!--
+    logout.php
+    Logout page of the website
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+-->
+
 <?php
     require_once "app/session.php";
 

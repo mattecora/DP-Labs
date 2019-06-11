@@ -1,4 +1,12 @@
-/* General declarations */
+/*
+    style.css
+    Main stylesheet for the website
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+*/
+
+/*
+    General declarations
+*/
 
 body {
     font-family: sans-serif;
@@ -9,6 +17,7 @@ body {
 table {
     margin-left: auto;
     margin-right: auto;
+    text-align: center;
 }
 
 input {
@@ -27,7 +36,9 @@ input[type=submit] {
     color: white;
 }
 
-/* Header section */
+/*
+    Header section
+*/
 
 h1 {
     margin: 0px;
@@ -41,7 +52,9 @@ h1 {
     padding: 0.5em;
 }
 
-/* Main section */
+/*
+    Main section
+*/
 
 .hidden {
     display: none;
@@ -59,7 +72,9 @@ h1 {
     display: flex;
 }
 
-/* Menu section */
+/*
+    Menu section
+*/
 
 .menu {
     flex: auto;
@@ -87,7 +102,9 @@ span {
     vertical-align: middle;
 }
 
-/* Contents section */
+/*
+    Contents section
+*/
 
 .contents {
     flex: auto;

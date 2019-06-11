@@ -1,3 +1,9 @@
+<!--
+    login.php
+    Login page of the website
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+-->
+
 <?php
     require_once "app/enforce_https.php";
     require_once "app/airplane.php";

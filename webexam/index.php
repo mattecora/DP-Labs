@@ -1,9 +1,19 @@
-<?php
-    require_once "app/enforce_https.php";
+<!--
+    index.php
+    Entry point of the website
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+-->
 
+<?php
     require_once "app/airplane.php";
     require_once "app/seatmap.php";
     require_once "app/session.php";
+
+    $session_status = session_start_timeout();
+
+    // Enforce HTTPS if the session is started
+    if ($session_status === SESSION_OK)
+        require_once "app/enforce_https.php";
 
     $db = new Airplane();
     $seatmap = $db->getSeatStatusAll();
@@ -20,11 +30,6 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <?php
-        if (session_start_timeout() == SESSION_EXPIRED)
-            echo "<script>alert(\"Your session has expired!\");</script>";
-    ?>
-
     <div class="container">
         <?php require_once "components/header.php"; ?>
     </div>
@@ -86,13 +91,13 @@
     <script src="js/seatmap.js"></script>
 
     <script>
-        var seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
+        $(document).ready(function() {
+            <?php if ($session_status === SESSION_EXPIRED) { ?>
+                alert("Your session has expired!");
+            <?php } ?>
 
-        <?php if (user_is_logged()) { ?>
-            var username = "<?= $_SESSION["username"] ?>";
-        <?php } else { ?>
-            var username = undefined;
-        <?php } ?>
+            seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
+        });
     </script>
 </body>
 </html>

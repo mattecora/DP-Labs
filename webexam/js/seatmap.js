@@ -20,13 +20,7 @@ function SeatMap(data) {
     this.counter.update(this.seats);
 
     this.requestSelect = function(seat) {
-        var obj = this;
-
-        // Check if the user is logged in
-        if (username === undefined) {
-            alert("Seat reservation is for registered users only!");
-            return;
-        }
+        var self = this;
     
         // Check if the seat is already purchased
         if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
@@ -37,25 +31,25 @@ function SeatMap(data) {
         // Try to purchase the seat
         ajaxReserveSeat(seat, function(data) {
             // Update model and view
-            obj.seats[seat].update(data[seat]);
+            self.seats[seat].update(data[seat]);
 
             // Update counters
-            obj.counter.update(obj.seats);
+            self.counter.update(self.seats);
         });
     };
 
     this.requestUpdate = function() {
-        var obj = this;
+        var self = this;
 
         // Retrieve the seat map
         ajaxGetSeatStatusAll(function(data) {
             // Update the seat models and views
-            obj.update(data);
+            self.update(data);
         });
     };
 
     this.requestPurchase = function() {
-        var obj = this;
+        var self = this;
         var toPurchase = [];
 
         // Check all seats to purchase
@@ -67,7 +61,7 @@ function SeatMap(data) {
         // Request the purchase
         ajaxPurchaseSeats(toPurchase, function(data) {
             // Update the seat models and views
-            obj.update(data);
+            self.update(data);
         });
     };
 }
