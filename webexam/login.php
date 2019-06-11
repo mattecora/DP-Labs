@@ -1,11 +1,11 @@
 <?php
     require_once "app/enforce_https.php";
-    require_once "app/db.php";
+    require_once "app/airplane.php";
     require_once "app/session.php" ;
 
     if (isset($_POST["username"]) && isset($_POST["password"])) {
         // Open the DB and verify login info
-        $db = new AirplaneDatabase();
+        $db = new Airplane();
 
         if ($db->checkUser($_POST["username"], $_POST["password"])) {
             // Login the user

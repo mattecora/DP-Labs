@@ -1,5 +1,5 @@
 <?php
-    require_once("session.php");
+    require_once "session.php";
 
     class Seat implements JsonSerializable {
         public const INVALID = null;

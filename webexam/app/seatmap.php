@@ -1,4 +1,6 @@
 <?php
+    require_once "seat.php";
+
     class SeatMap implements JsonSerializable {
         public const ROWS = 10;
         public const PLACES = 6;
@@ -10,8 +12,9 @@
 
             // Create the seat map
             for ($row = 0; $row < SeatMap::ROWS; $row++) {
-                for ($place = 1; $place <= SeatMap::PLACES; $place++) {
-                    $this->seatmap[chr($row + ord('A')) . $place] = new Seat(chr($row + ord('A')) . $place, Seat::FREE, null);
+                for ($place = 0; $place < SeatMap::PLACES; $place++) {
+                    $seat_num = SeatMap::generateSeatNum($row, $place);
+                    $this->seatmap[$seat_num] = new Seat($seat_num, Seat::FREE, null);
                 }
             }
         }
@@ -36,6 +39,25 @@
             return array_map(function ($data) {
                 return $data->getStatus();
             }, $this->seatmap);
+        }
+
+        public static function generateSeatNum($row, $place) {
+            if ($row >= 0 && $row < SeatMap::ROWS && $place >= 0 && $place < SeatMap::PLACES)
+                return ($row + 1) . chr($place + ord('A'));
+            return null;
+        }
+
+        public static function checkSeatNum($seat_num) {
+            // Check seat format
+            if (sscanf($seat_num, "%d%c", $row, $place) != 2)
+                return null;
+            
+            // Transform to number formats
+            $row = $row - 1;
+            $place = ord($place) - ord('A');
+
+            // Check equality
+            return SeatMap::generateSeatNum($row, $place) === $seat_num;
         }
     }
 ?>

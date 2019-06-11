@@ -1,11 +1,11 @@
 <?php
     require_once "app/enforce_https.php";
 
-    require_once "app/db.php";
+    require_once "app/airplane.php";
     require_once "app/seatmap.php";
     require_once "app/session.php";
 
-    $db = new AirplaneDatabase();
+    $db = new Airplane();
     $seatmap = $db->getSeatStatusAll();
 ?>
 
@@ -41,8 +41,8 @@
                             <?php for ($row = 0; $row < SeatMap::ROWS; $row++) { ?>
                                 <tr>
                                     <?php
-                                        for ($col = 1; $col <= SeatMap::PLACES; $col++) {
-                                            $seatid = chr($row + ord('A')) . $col;
+                                        for ($place = 0; $place < SeatMap::PLACES; $place++) {
+                                            $seatid = SeatMap::generateSeatNum($row, $place);
                                             if (user_is_logged()) {
                                     ?>
                                         <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="seats.requestSelect('<?= $seatid ?>')">

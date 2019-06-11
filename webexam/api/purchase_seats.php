@@ -1,6 +1,6 @@
 <?php
     require_once "../app/enforce_https.php";
-    require_once "../app/db.php";
+    require_once "../app/airplane.php";
     require_once "../app/session.php";
 
     header("Content-Type: application/json");
@@ -14,7 +14,7 @@
     
     if (isset($_POST["seats"])) {
         // Create a database connection and perform purchase
-        $db = new AirplaneDatabase();
+        $db = new Airplane();
         echo json_encode($db->purchaseSeats($_POST["seats"]));
     } else {
         // Otherwise, bad request

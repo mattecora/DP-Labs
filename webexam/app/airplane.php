@@ -4,7 +4,7 @@
     require_once "seatmap.php";
     require_once "session.php";
 
-    class AirplaneDatabase {
+    class Airplane {
         private const HOST = "localhost";
         private const USER = "root";
         private const PASS = "";
@@ -17,7 +17,7 @@
          * Creates a new mysqli object and checks for connection errors.
          */
         public function __construct() {
-            $this->db = new mysqli(AirplaneDatabase::HOST, AirplaneDatabase::USER, AirplaneDatabase::PASS, AirplaneDatabase::NAME);
+            $this->db = new mysqli(Airplane::HOST, Airplane::USER, Airplane::PASS, Airplane::NAME);
         
             if ($this->db->connect_error)
                 die("Database connect error (" . $this->db->connect_errno . ") " . $this->db->connect_error);
@@ -35,6 +35,10 @@
          * Returns the status for the given seat.
          */
         public function getSeatStatus($seat_num) {
+            // Check seat correctness
+            if (!SeatMap::checkSeatNum($seat_num))
+                return new Message(false, "Invalid seat number: $seat_num", null);
+
             // Prepare the query
             $stmt = $this->db->prepare("SELECT status, reserver FROM airplane WHERE seat = ?");
             $stmt->bind_param("s", $seat_num);
@@ -60,6 +64,10 @@
          * Returns the status for the given seat (version using locks).
          */
         public function getSeatStatusForUpdate($seat_num) {
+            // Check seat correctness
+            if (!SeatMap::checkSeatNum($seat_num))
+                return new Message(false, "Invalid seat number: $seat_num", null);
+            
             // Prepare the query
             $stmt = $this->db->prepare("SELECT status, reserver FROM airplane WHERE seat = ? FOR UPDATE");
             $stmt->bind_param("s", $seat_num);
@@ -109,6 +117,10 @@
             session_start_timeout();
             if (!user_is_logged())
                 return new Message(false, "User is not logged in", null);
+
+            // Check seat correctness
+            if (!SeatMap::checkSeatNum($seat_num))
+                return new Message(false, "Invalid seat number: $seat_num", null);
 
             // Begin the transaction
             $this->db->begin_transaction();
