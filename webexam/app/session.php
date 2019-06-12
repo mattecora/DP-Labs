@@ -11,10 +11,27 @@
     const SESSION_EXPIRED = 1;
     const NO_SESSION = 2;
 
+    /**
+     * enforce_https()
+     * Simple function to redirect on the HTTPS version of the requested page
+     */
+    function enforce_https() {
+        if (!isset($_SERVER["HTTPS"]))
+            header("Location: https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
+    }
+
+    /**
+     * user_is_logged()
+     * Function to check if the user has logged without starting the session again
+     */
     function user_is_logged() {
         return isset($_SESSION["username"]);
     }
 
+    /**
+     * session_start_login()
+     * Function to initialize the session variables, called after a successful login
+     */
     function session_start_login($username) {
         // Start the session
         session_start();
@@ -24,6 +41,10 @@
         $_SESSION["last"] = time();
     }
 
+    /**
+     * session_start_timeout()
+     * Function to start the session and check the time difference with the last access
+     */
     function session_start_timeout() {
         // Start the session
         if (session_status() === PHP_SESSION_NONE)
@@ -48,6 +69,10 @@
         return SESSION_OK;
     }
 
+    /**
+     * session_logout()
+     * Function to cleanup the session, called at logout time
+     */
     function session_logout() {
         // Unset the session variables
         $_SESSION = array();

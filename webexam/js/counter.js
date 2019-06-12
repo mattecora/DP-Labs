@@ -1,3 +1,9 @@
+/**
+    counter.js
+    Provides the classes used to implement the counters, organized according to the MVC pattern
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+*/
+
 function CounterModel() {
     this.free = 0;
     this.reserved = 0;

@@ -29,6 +29,7 @@
         }
         
         public function getStatus() {
+            // If the seat has been reserved by the logged user, return Seat::SELECTED
             if (session_start_timeout() === SESSION_OK && $this->status === Seat::RESERVED && $_SESSION["username"] === $this->reserver)
                 return Seat::SELECTED;
             return $this->status;

@@ -1,3 +1,9 @@
+/**
+    seat.js
+    Provides the classes used to represent the seats, organized according to the MVC pattern
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+*/
+
 const STATUS_FREE = 0;
 const STATUS_RESERVED = 1;
 const STATUS_PURCHASED = 2;

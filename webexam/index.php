@@ -13,7 +13,7 @@
 
     // Enforce HTTPS if the session is started
     if ($session_status === SESSION_OK)
-        require_once "app/enforce_https.php";
+        enforce_https();
 
     $db = new Airplane();
     $seatmap = $db->getSeatStatusAll();

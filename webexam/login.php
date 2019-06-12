@@ -5,22 +5,24 @@
 -->
 
 <?php
-    require_once "app/enforce_https.php";
     require_once "app/airplane.php";
     require_once "app/session.php" ;
 
+    enforce_https();
+
     if (isset($_POST["username"]) && isset($_POST["password"])) {
-        // Open the DB and verify login info
+        // Open the DB and add new user
         $db = new Airplane();
 
-        if ($db->checkUser($_POST["username"], $_POST["password"])) {
+        // Verify login info
+        $msg = $db->checkUser($_POST["username"], $_POST["password"]);
+
+        if ($msg->getSuccess()) {
             // Login the user
             session_start_login($_POST["username"]);
 
             // Redirect to the index page
             header("Location: index.php");
-        } else {
-            $login_failed = true;
         }
     }
 ?>
@@ -55,11 +57,16 @@
         </div>
     </div>
 
-    <?php if (isset($login_failed)) echo "<script>alert(\"Login failed.\");</script>"; ?>
-
     <?php require_once "components/jscheck.php"; ?>
 
     <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/login.js"></script>
+    <script>
+        $(document).ready(function() {
+            <?php if (!$msg->getSuccess()) { ?>
+                alert("<?= $msg->getMessage() ?>");
+            <?php } ?>
+        });
+    </script>
 </body>
 </html>

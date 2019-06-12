@@ -19,8 +19,8 @@
         private $db;
 
         /**
-         * Constructor of the database.
-         * Creates a new mysqli object and checks for connection errors.
+         * __construct()
+         * Creates a new database object and checks for connection errors.
          */
         public function __construct() {
             $this->db = new mysqli(Airplane::HOST, Airplane::USER, Airplane::PASS, Airplane::NAME);
@@ -30,7 +30,7 @@
         }
 
         /**
-         * Destructor of the database.
+         * __destruct()
          * Closes the database connection.
          */
         public function __destruct() {
@@ -38,6 +38,7 @@
         }
 
         /**
+         * getSeatStatus()
          * Returns the status for the given seat.
          */
         public function getSeatStatus($seat_num) {
@@ -52,7 +53,7 @@
             // Execute the query and check results
             $res = $stmt->execute();
             if (!$res)
-                return new Message(false, "Database error: " . $this->db->errno. ".", null);
+                return new Message(false, "Database error: " . $stmt->errno. ".", null);
 
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
@@ -62,6 +63,7 @@
         }
 
         /**
+         * getSeatStatusForUpdate()
          * Returns the status for the given seat (version using locks).
          */
         public function getSeatStatusForUpdate($seat_num) {
@@ -76,7 +78,7 @@
             // Execute the query and check results
             $res = $stmt->execute();
             if (!$res)
-                return new Message(false, "Database error: " . $this->db->errno . ".", null);
+                return new Message(false, "Database error: " . $stmt->errno . ".", null);
 
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
@@ -86,7 +88,8 @@
         }
     
         /**
-         * Return the status of all seats in the database.
+         * getSeatStatusAll()
+         * Returns the status of all seats in the database.
          */
         public function getSeatStatusAll() {
             $seatmap = new SeatMap();
@@ -95,7 +98,7 @@
             $stmt = $this->db->prepare("SELECT * FROM airplane");
             $res = $stmt->execute();
             if (!$res)
-                return new Message(false, "Database error: " . $this->db->errno . ".", null);
+                return new Message(false, "Database error: " . $stmt->errno . ".", null);
     
             // Loop through the results and fill the seat map
             $stmt->bind_result($seat_num, $status, $reserver);
@@ -106,7 +109,8 @@
         }
 
         /**
-         * Request a seat in the airplane.
+         * requestSeat()
+         * Requests a seat in the airplane.
          */
         public function requestSeat($seat_num) {
             // Check that the user has logged in
@@ -163,6 +167,7 @@
         }
 
         /**
+         * purchaseSeats()
          * Purchases the selected seats.
          */
         public function purchaseSeats($seats) {
@@ -208,16 +213,17 @@
         }
 
         /**
-         * Create a new user for the system.
+         * createUser()
+         * Creates a new user for the system.
          */
         public function createUser($username, $password) {
             // Check username is a valid email
             if (!preg_match("/^[a-zA-z0-9]+@[a-zA-z0-9]+\.[a-zA-z0-9]+$/", $username))
-                return false;
+                return new Message(false, "Registration failed: invalid username provided.", null);
             
             // Check password format
             if (!preg_match("/[a-z]/", $password) || (!preg_match("/[0-9A-Z]/", $password)))
-                return false;
+                return new Message(false, "Registration failed: invalid password provided.", null);
             
             // Encode the password
             $enc_passw = password_hash($password, PASSWORD_DEFAULT);
@@ -233,17 +239,23 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                return false;
+                
+                // Check if it is a primary key constraint error
+                if ($stmt->errno === 1062)
+                    return new Message(false, "Registration failed: a user with the same name already exists.", null);
+                else
+                    return new Message(false, "Registration failed: database error ($stmt->errno).", null);
             }
 
             // Commit the transaction
             $this->db->commit();
 
-            return true;
+            return new Message(true, "Registration successful.", null);
         }
 
         /**
-         * Check the login information of an user.
+         * checkUser()
+         * Checks the login information of an user.
          */
         public function checkUser($username, $password) {
             // Prepare the query
@@ -254,7 +266,7 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                return false;
+                return new Message(false, "Login failed: database error ($stmt->errno).", null);
             }
 
             // Read the encoded password
@@ -262,7 +274,9 @@
             $stmt->fetch();
             
             // Check the password
-            return password_verify($password, $enc_passw);
+            if (!isset($enc_passw) || !password_verify($password, $enc_passw))
+                return new Message(false, "Login failed: incorrect username or password.", null);
+            return new Message(true, "Login successful.", null);
         }
     }
 ?>

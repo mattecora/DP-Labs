@@ -1,3 +1,9 @@
+/**
+    seatmap.js
+    Provides the class for representing the cabin seat map, which handles user interactions
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+*/
+
 function SeatMap(data) {
     this.seats = {};
     this.counter = new CounterController();
@@ -24,7 +30,7 @@ function SeatMap(data) {
     
         // Check if the seat is already purchased
         if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
-            alert("Seat " + seat + " has already been purchased");
+            alert("Seat already purchased: " + seat + ".");
             return;
         }
 

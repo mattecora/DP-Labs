@@ -1,7 +1,7 @@
 <?php
     /*
         seatmap.php
-        Provides the SeatMap class, used to represent the entire seat map
+        Provides the SeatMap class, used to represent the cabin seat map
         Matteo Corain - Distributed programming I - A.Y. 2018-19
     */
 
@@ -48,6 +48,7 @@
         }
 
         public static function generateSeatNum($row, $place) {
+            // Check boundaries and generate seat number
             if ($row >= 0 && $row < SeatMap::ROWS && $place >= 0 && $place < SeatMap::PLACES)
                 return chr($place + ord('A')). ($row + 1);
             return null;

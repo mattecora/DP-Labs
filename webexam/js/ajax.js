@@ -1,3 +1,9 @@
+/**
+    ajax.js
+    Provides the functions for performing the needed AJAX interactions
+    Matteo Corain - Distributed programming I - A.Y. 2018-19
+*/
+
 function ajaxGetSeatStatus(seat, callback) {
     $.ajax("api/get_seat_status.php", {
         method: "POST",
