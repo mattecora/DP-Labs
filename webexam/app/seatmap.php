@@ -1,4 +1,10 @@
 <?php
+    /*
+        seatmap.php
+        Provides the SeatMap class, used to represent the entire seat map
+        Matteo Corain - Distributed programming I - A.Y. 2018-19
+    */
+
     require_once "seat.php";
 
     class SeatMap implements JsonSerializable {
@@ -14,7 +20,7 @@
             for ($row = 0; $row < SeatMap::ROWS; $row++) {
                 for ($place = 0; $place < SeatMap::PLACES; $place++) {
                     $seat_num = SeatMap::generateSeatNum($row, $place);
-                    $this->seatmap[$seat_num] = new Seat($seat_num, Seat::FREE, null);
+                    $this->seatmap[$seat_num] = new Seat($seat_num, Seat::INVALID, null);
                 }
             }
         }
@@ -43,13 +49,13 @@
 
         public static function generateSeatNum($row, $place) {
             if ($row >= 0 && $row < SeatMap::ROWS && $place >= 0 && $place < SeatMap::PLACES)
-                return ($row + 1) . chr($place + ord('A'));
+                return chr($place + ord('A')). ($row + 1);
             return null;
         }
 
         public static function checkSeatNum($seat_num) {
             // Check seat format
-            if (sscanf($seat_num, "%d%c", $row, $place) != 2)
+            if (sscanf($seat_num, "%c%d", $place, $row) != 2)
                 return null;
             
             // Transform to number formats

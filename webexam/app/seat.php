@@ -1,4 +1,10 @@
 <?php
+    /*
+        seat.php
+        Provides the Seat class, used to represent the status of a seat
+        Matteo Corain - Distributed programming I - A.Y. 2018-19
+    */
+
     require_once "session.php";
 
     class Seat implements JsonSerializable {

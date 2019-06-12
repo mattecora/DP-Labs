@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <?php if (isset($login_failed)) echo "<script>alert(\"Login failed!\");</script>"; ?>
+    <?php if (isset($login_failed)) echo "<script>alert(\"Login failed.\");</script>"; ?>
 
     <?php require_once "components/jscheck.php"; ?>
 

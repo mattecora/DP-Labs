@@ -93,7 +93,7 @@
     <script>
         $(document).ready(function() {
             <?php if ($session_status === SESSION_EXPIRED) { ?>
-                alert("Your session has expired!");
+                alert("Expired session.");
             <?php } ?>
 
             seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);

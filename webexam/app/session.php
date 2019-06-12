@@ -1,4 +1,10 @@
 <?php
+    /*
+        session.php
+        Provides the functions for managing the user session
+        Matteo Corain - Distributed programming I - A.Y. 2018-19
+    */
+
     const TIMEOUT = 120;
     
     const SESSION_OK = 0;

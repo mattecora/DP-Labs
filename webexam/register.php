@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <?php if (isset($creation_failed)) echo "<script>alert(\"Cannot create user!\");</script>"; ?>
+    <?php if (isset($creation_failed)) echo "<script>alert(\"Registration failed.\");</script>"; ?>
 
     <?php require_once "components/jscheck.php"; ?>
 

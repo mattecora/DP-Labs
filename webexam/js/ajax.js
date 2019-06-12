@@ -15,9 +15,10 @@ function ajaxGetSeatStatus(seat, callback) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 400) {
-                alert("Invalid request");
+                alert("Invalid request.");
             } else if (xhr.status === 401) {
-                alert("Invalid or expired session");
+                alert("Invalid or expired session.");
+                window.location = "index.php";
             }
         }
     });
@@ -37,9 +38,10 @@ function ajaxGetSeatStatusAll(callback) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 400) {
-                alert("Invalid request");
+                alert("Invalid request.");
             } else if (xhr.status === 401) {
-                alert("Invalid or expired session");
+                alert("Invalid or expired session.");
+                window.location = "index.php";
             }
         }
     });
@@ -62,9 +64,10 @@ function ajaxReserveSeat(seat, callback) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 400) {
-                alert("Invalid request");
+                alert("Invalid request.");
             } else if (xhr.status === 401) {
-                alert("Invalid or expired session");
+                alert("Invalid or expired session.");
+                window.location = "index.php";
             }
         }
     });
@@ -87,9 +90,10 @@ function ajaxPurchaseSeats(seats, callback) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 400) {
-                alert("Invalid request");
+                alert("Invalid request.");
             } else if (xhr.status === 401) {
-                alert("Invalid or expired session");
+                alert("Invalid or expired session.");
+                window.location = "index.php";
             }
         }
     });

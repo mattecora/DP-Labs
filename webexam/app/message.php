@@ -1,4 +1,10 @@
 <?php
+    /*
+        message.php
+        Provides the Message class, describing a message to be returned to the user
+        Matteo Corain - Distributed programming I - A.Y. 2018-19
+    */
+
     class Message implements JsonSerializable {
         private $success;
         private $message;
