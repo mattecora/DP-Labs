@@ -8,18 +8,18 @@
     require_once "app/airplane.php";
     require_once "app/session.php" ;
 
-    enforce_https();
+    $session = new Session();
 
     if (isset($_POST["username"]) && isset($_POST["password"])) {
         // Open the DB and add new user
-        $db = new Airplane();
+        $airplane = new Airplane();
 
         // Verify login info
-        $msg = $db->checkUser($_POST["username"], $_POST["password"]);
+        $msg = $airplane->checkUser($_POST["username"], $_POST["password"]);
 
         if ($msg->getSuccess()) {
             // Login the user
-            session_start_login($_POST["username"]);
+            $session->login($_POST["username"]);
 
             // Redirect to the index page
             header("Location: index.php");

@@ -8,11 +8,11 @@
     require_once "../app/airplane.php";
     require_once "../app/session.php";
 
-    enforce_https();
+    $session = new Session();
     header("Content-Type: application/json");
 
     // Check user login
-    if (session_start_timeout() != SESSION_OK) {
+    if ($session->getStatus() != Session::STATUS_OK) {
         // User is unauthorized
         http_response_code(401);
         exit;
@@ -20,11 +20,11 @@
     
     if (isset($_POST["seat"])) {
         // Create a database connection and get seat status
-        $db = new Airplane();
-        echo json_encode($db->getSeatStatus($_POST["seat"]));
+        $airplane = new Airplane();
+        echo json_encode($airplane->getSeatStatus($_POST["seat"]));
     } else {
         // Create a database connection and get status of all seats
-        $db = new Airplane();
-        echo json_encode($db->getSeatStatusAll());
+        $airplane = new Airplane();
+        echo json_encode($airplane->getSeatStatusAll());
     }
 ?>

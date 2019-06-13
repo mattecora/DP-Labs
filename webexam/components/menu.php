@@ -1,7 +1,7 @@
 <div class="menu">
     <h2>Menu</h2>
     <a class="menu-element" href="."><img class="icon" src="img/home.svg"> <span>Home</span></a>
-    <?php if (!user_is_logged()) { ?>
+    <?php if ((new Session())->getStatus() !== Session::STATUS_OK) { ?>
         <a class="menu-element" href="login.php"><img class="icon" src="img/login.svg"> <span>Login</span></a>
         <a class="menu-element" href="register.php"><img class="icon" src="img/register.svg"> <span>Register</span></a>
     <?php } else { ?>

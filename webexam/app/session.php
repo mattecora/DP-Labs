@@ -1,92 +1,112 @@
 <?php
     /*
         session.php
-        Provides the functions for managing the user session
+        Provides the Session class, for managing the user session
         Matteo Corain - Distributed programming I - A.Y. 2018-19
     */
 
-    define("TIMEOUT", 120);
-    
-    define("SESSION_OK", 0);
-    define("SESSION_EXPIRED", 1);
-    define("NO_SESSION", 2);
-
-    /**
-     * enforce_https()
-     * Simple function to redirect on the HTTPS version of the requested page
-     */
-    function enforce_https() {
-        if (!isset($_SERVER["HTTPS"]))
-            header("Location: https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
-    }
-
-    /**
-     * user_is_logged()
-     * Function to check if the user has logged without starting the session again
-     */
-    function user_is_logged() {
-        return isset($_SESSION["username"]);
-    }
-
-    /**
-     * session_start_login()
-     * Function to initialize the session variables, called after a successful login
-     */
-    function session_start_login($username) {
-        // Start the session
-        session_start();
-
-        // Set session fields
-        $_SESSION["username"] = $username;
-        $_SESSION["last"] = time();
-    }
-
-    /**
-     * session_start_timeout()
-     * Function to start the session and check the time difference with the last access
-     */
-    function session_start_timeout() {
-        // Start the session
-        if (session_status() === PHP_SESSION_NONE)
-            session_start();
-
-        // User has not logged in
-        if (!isset($_SESSION["username"]) || !isset($_SESSION["last"])) {
-            return NO_SESSION;
-        }
-
-        // Compute time difference
-        $delta = time() - $_SESSION["last"];
-
-        // Check time difference
-        if ($delta > TIMEOUT) {
-            session_logout();
-            return SESSION_EXPIRED;
-        }
+    class Session {
+        const TIMEOUT = 120;
         
-        // Everything ok, update time
-        $_SESSION["last"] = time();
-        return SESSION_OK;
-    }
+        const STATUS_OK = 0;
+        const STATUS_EXPIRED = 1;
+        const STATUS_NONE = 2;
 
-    /**
-     * session_logout()
-     * Function to cleanup the session, called at logout time
-     */
-    function session_logout() {
-        // Unset the session variables
-        $_SESSION = array();
+        private $status;
 
-        // If we are using cookies, delete the session cookie
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 3600,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
+        /**
+         * __construct()
+         * Starts the session, checks the time difference and sets the status
+         */
+        public function __construct() {
+            // Enforce HTTPS usage
+            if (!isset($_SERVER["HTTPS"]))
+                header("Location: https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
+            
+            // Start the session
+            if (session_status() === PHP_SESSION_NONE)
+                session_start();
+
+            // User has not logged in
+            if (!isset($_SESSION["username"]) || !isset($_SESSION["last"])) {
+                $this->status = Session::STATUS_NONE;
+                return;
+            }
+
+            // Compute time difference
+            $delta = time() - $_SESSION["last"];
+
+            // Check time difference
+            if ($delta > Session::TIMEOUT) {
+                $this->logout();
+                $this->status = Session::STATUS_EXPIRED;
+                return;
+            }
+            
+            // Everything ok, update time
+            $_SESSION["last"] = time();
+            $this->status = Session::STATUS_OK;
         }
 
-        // Destroy the session
-        session_destroy();
+        /**
+         * getStatus()
+         * Returns the status of the session
+         */
+        public function getStatus() {
+            return $this->status;
+        }
+
+        /**
+         * getUsername()
+         * Returns the username of the logged user
+         */
+        public function getUsername() {
+            return $_SESSION["username"];
+        }
+
+        /**
+         * getLastAccess()
+         * Returns the last access time of the logged user
+         */
+        public function getLastAccess() {
+            return $_SESSION["last"];
+        }
+
+        /**
+         * login()
+         * Initializes the session variables, called after a successful login
+         */
+        public function login($username) {
+            // Set session fields
+            $_SESSION["username"] = $username;
+            $_SESSION["last"] = time();
+
+            // Set the session status
+            $this->status = Session::STATUS_OK;
+        }
+
+        /**
+         * logout()
+         * Cleans up the session, called at logout time
+         */
+        public function logout() {
+            // Unset the session variables
+            $_SESSION = array();
+
+            // If we are using cookies, delete the session cookie
+            if (ini_get("session.use_cookies")) {
+                $params = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 3600,
+                    $params["path"], $params["domain"],
+                    $params["secure"], $params["httponly"]
+                );
+            }
+
+            // Destroy the session
+            session_destroy();
+
+            // Set the session status
+            $this->status = Session::STATUS_NONE;
+        }
     }
 ?>

@@ -9,14 +9,10 @@
     require_once "app/seatmap.php";
     require_once "app/session.php";
 
-    $session_status = session_start_timeout();
+    $session = new Session();
 
-    // Enforce HTTPS if the session is started
-    if ($session_status === SESSION_OK)
-        enforce_https();
-
-    $db = new Airplane();
-    $seatmap = $db->getSeatStatusAll();
+    $airplane = new Airplane();
+    $seatmap = $airplane->getSeatStatusAll();
 ?>
 
 <!DOCTYPE html>
@@ -48,7 +44,7 @@
                                     <?php
                                         for ($place = 0; $place < SeatMap::PLACES; $place++) {
                                             $seatid = SeatMap::generateSeatNum($row, $place);
-                                            if (user_is_logged()) {
+                                            if ($session->getStatus() === Session::STATUS_OK) {
                                     ?>
                                         <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="seats.requestSelect('<?= $seatid ?>')">
                                             <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
@@ -65,8 +61,8 @@
                             <?php } ?>
                         </table>
 
-                        <?php if (user_is_logged()) { ?>
-                            <p>You are logged in as <?= $_SESSION["username"] ?></p>
+                        <?php if ($session->getStatus() === Session::STATUS_OK) { ?>
+                            <p>You are logged in as <?= $session->getUsername() ?></p>
                         <?php } ?>
                     </div>
                     
@@ -92,7 +88,7 @@
 
     <script>
         $(document).ready(function() {
-            <?php if ($session_status === SESSION_EXPIRED) { ?>
+            <?php if ($session->getStatus() === Session::STATUS_EXPIRED) { ?>
                 alert("Expired session.");
             <?php } ?>
 

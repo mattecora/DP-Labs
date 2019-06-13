@@ -110,9 +110,11 @@
          */
         public function requestSeat($seat_num) {
             // Check that the user has logged in
-            session_start_timeout();
-            if (!user_is_logged())
-                return new Message(false, "User is not logged in.", null);
+            $session = new Session();
+            if ($session->getStatus() != Session::STATUS_OK)
+                return new Message(false, "User session is not valid.", null);
+            
+            $user = $session->getUsername();
 
             // Check seat correctness
             if (!SeatMap::checkSeatNum($seat_num))
@@ -140,12 +142,12 @@
             } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
                 // Seat selected by another user, update reservation
                 $stmt = $this->db->prepare("UPDATE airplane SET reserver = ? WHERE seat = ?");
-                $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
+                $stmt->bind_param("ss", $user, $seat_num);
                 $msg = "Seat selected from another user: $seat_num.";
             } else {
                 // Seat free, insert reservation
                 $stmt = $this->db->prepare("UPDATE airplane SET status = 1, reserver = ? WHERE seat = ?");
-                $stmt->bind_param("ss", $_SESSION["username"], $seat_num);
+                $stmt->bind_param("ss", $user, $seat_num);
                 $msg = "Seat selected: $seat_num.";
             }
             
@@ -168,9 +170,11 @@
          */
         public function purchaseSeats($seats) {
             // Check that the user has logged in
-            session_start_timeout();
-            if (!user_is_logged())
-                return new Message(false, "User is not logged in.", null);
+            $session = new Session();
+            if ($session->getStatus() != Session::STATUS_OK)
+                return new Message(false, "User session is not valid.", null);
+            
+            $user = $session->getUsername();
             
             // If no seat is requested, immediately return
             if (empty($seats))
@@ -191,11 +195,11 @@
             if (empty($invalid_seats)) {
                 // Set places as purchased
                 $stmt = $this->db->prepare("UPDATE airplane SET status = 2 WHERE status = 1 AND reserver = ?");
-                $stmt->bind_param("s", $_SESSION["username"]);
+                $stmt->bind_param("s", $user);
             } else {
                 // Free all places
                 $stmt = $this->db->prepare("UPDATE airplane SET status = 0, reserver = NULL WHERE status = 1 AND reserver = ?");
-                $stmt->bind_param("s", $_SESSION["username"]);
+                $stmt->bind_param("s", $user);
             }
 
             // Commit the transaction
