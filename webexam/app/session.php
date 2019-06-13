@@ -5,11 +5,11 @@
         Matteo Corain - Distributed programming I - A.Y. 2018-19
     */
 
-    const TIMEOUT = 120;
+    define("TIMEOUT", 120);
     
-    const SESSION_OK = 0;
-    const SESSION_EXPIRED = 1;
-    const NO_SESSION = 2;
+    define("SESSION_OK", 0);
+    define("SESSION_EXPIRED", 1);
+    define("NO_SESSION", 2);
 
     /**
      * enforce_https()

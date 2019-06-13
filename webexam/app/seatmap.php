@@ -8,8 +8,8 @@
     require_once "seat.php";
 
     class SeatMap implements JsonSerializable {
-        public const ROWS = 10;
-        public const PLACES = 6;
+        const ROWS = 10;
+        const PLACES = 6;
 
         private $seatmap;
 

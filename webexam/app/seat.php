@@ -8,11 +8,11 @@
     require_once "session.php";
 
     class Seat implements JsonSerializable {
-        public const INVALID = null;
-        public const FREE = 0;
-        public const RESERVED = 1;
-        public const PURCHASED = 2;
-        public const SELECTED = 3;
+        const INVALID = null;
+        const FREE = 0;
+        const RESERVED = 1;
+        const PURCHASED = 2;
+        const SELECTED = 3;
 
         private $seat_num;
         private $status;

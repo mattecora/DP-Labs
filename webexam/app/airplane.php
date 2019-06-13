@@ -5,17 +5,13 @@
         Matteo Corain - Distributed programming I - A.Y. 2018-19
     */
 
+    require_once "dbconf.php";
     require_once "message.php";
     require_once "seat.php";
     require_once "seatmap.php";
     require_once "session.php";
 
     class Airplane {
-        private const HOST = "localhost";
-        private const USER = "root";
-        private const PASS = "";
-        private const NAME = "dpexam";
-
         private $db;
 
         /**
@@ -23,7 +19,7 @@
          * Creates a new database object and checks for connection errors.
          */
         public function __construct() {
-            $this->db = new mysqli(Airplane::HOST, Airplane::USER, Airplane::PASS, Airplane::NAME);
+            $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         
             if ($this->db->connect_error)
                 die("Database connect error (" . $this->db->connect_errno . ") " . $this->db->connect_error);
