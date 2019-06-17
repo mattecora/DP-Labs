@@ -188,22 +188,36 @@
             // Check status of all places
             foreach ($seats as $seat_num) {
                 $seat = $this->getSeatStatusForUpdate($seat_num);
-                if ($seat->getData()->getStatus() !== Seat::SELECTED)
+                if ($seat->getData()->getStatus() !== Seat::SELECTED && $seat->getData()->getStatus() !== Seat::FREE)
                     $invalid_seats[] = $seat->getData()->getSeatNum();
             }
 
             if (empty($invalid_seats)) {
                 // Set places as purchased
-                $stmt = $this->db->prepare("UPDATE airplane SET status = 2 WHERE status = 1 AND reserver = ?");
-                $stmt->bind_param("s", $user);
+                $stmt = $this->db->prepare("UPDATE airplane SET status = 2 WHERE seat = ?");
+                
+                foreach ($seats as $seat_num) {
+                    $stmt->bind_param("s", $seat_num);
+                    
+                    $res = $stmt->execute();
+                    if (!$res) {
+                        $this->db->rollback();
+                        return new Message(false, "Database error: " . $this->db->error . ".", null);
+                    }
+                }
             } else {
                 // Free all places
                 $stmt = $this->db->prepare("UPDATE airplane SET status = 0, reserver = NULL WHERE status = 1 AND reserver = ?");
                 $stmt->bind_param("s", $user);
+                
+                $res = $stmt->execute();
+                if (!$res) {
+                    $this->db->rollback();
+                    return new Message(false, "Database error: " . $this->db->error . ".", null);
+                }
             }
 
             // Commit the transaction
-            $stmt->execute();
             $this->db->commit();
 
             if (empty($invalid_seats))
