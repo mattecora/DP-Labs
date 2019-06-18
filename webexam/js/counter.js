@@ -28,21 +28,24 @@ function CounterModel() {
     };
 }
 
-function CounterView(counterModel) {
+function CounterView(counterModel, freeSeatsElement, reservedSeatsElement, purchasedSeatsElement) {
     this.counterModel = counterModel;
+    this.freeSeatsElement = freeSeatsElement;
+    this.reservedSeatsElement = reservedSeatsElement;
+    this.purchasedSeatsElement = purchasedSeatsElement;
 
     this.render = function() {
-        $("#freeSeats").html(this.counterModel.free);
-        $("#reservedSeats").html(this.counterModel.reserved);
-        $("#purchasedSeats").html(this.counterModel.purchased);
+        this.freeSeatsElement.html(this.counterModel.free);
+        this.reservedSeatsElement.html(this.counterModel.reserved);
+        this.purchasedSeatsElement.html(this.counterModel.purchased);
     };
 
     this.render();
 }
 
-function CounterController() {
-    this.counterModel = new CounterModel();
-    this.counterView = new CounterView(this.counterModel);
+function CounterController(counterModel, counterView) {
+    this.counterModel = counterModel;
+    this.counterView = counterView;
 
     this.update = function(seats) {
         this.counterModel.reset();

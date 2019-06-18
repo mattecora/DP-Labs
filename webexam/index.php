@@ -23,47 +23,75 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Airplane seats reservation</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <?php require_once "components/header.php"; ?>
+        <header>
+            <h1><img class="icon-big" src="img/airplane.svg"><span>Airplane seats reservation system</span></h1>
+        </header>
     </div>
 
     <div id="main" class="container hidden">
         <div class="row">
-            <?php require_once "components/menu.php"; ?>
+            <div class="menu">
+                <h2>Menu</h2>
+                <a class="menu-element" href="."><img class="icon" src="img/home.svg"> <span>Home</span></a>
+<?php
+    if ($session->getStatus() !== Session::STATUS_OK) {
+?>
+                <a class="menu-element" href="login.php"><img class="icon" src="img/login.svg"> <span>Login</span></a>
+                <a class="menu-element" href="register.php"><img class="icon" src="img/register.svg"> <span>Register</span></a>
+<?php
+    } else {
+?>
+                <a class="menu-element" href="#" onclick="seats.requestUpdate();"><img class="icon" src="img/update.svg"> <span>Update</span></a>
+                <a class="menu-element" href="#" onclick="seats.requestPurchase();"><img class="icon" src="img/purchase.svg"> <span>Purchase</span></a>
+                <a class="menu-element" href="logout.php"><img class="icon" src="img/logout.svg"> <span>Logout</span></a>
+<?php
+    }
+?>
+            </div>
 
             <div class="contents">
                 <div class="row">
                     <div class="seatmap">
                         <h2>Seat map</h2>
                         <table>
-                            <?php for ($row = 0; $row < SeatMap::ROWS; $row++) { ?>
-                                <tr>
-                                    <?php
-                                        for ($place = 0; $place < SeatMap::PLACES; $place++) {
-                                            $seatid = SeatMap::generateSeatNum($row, $place);
-                                            if ($session->getStatus() === Session::STATUS_OK) {
-                                    ?>
-                                        <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="seats.requestSelect('<?= $seatid ?>')">
-                                            <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
-                                        </td>
-                                    <?php } else { ?>
-                                        <td id="<?= $seatid ?>" class="seat">
-                                            <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
-                                        </td>
-                                    <?php
-                                        }
-                                    } 
-                                    ?>
-                                </tr>
-                            <?php } ?>
+<?php
+    for ($row = 0; $row < SeatMap::ROWS; $row++) {
+?>
+                            <tr>
+<?php
+        for ($place = 0; $place < SeatMap::PLACES; $place++) {
+            $seatid = SeatMap::generateSeatNum($row, $place);
+            if ($session->getStatus() === Session::STATUS_OK) {
+?>
+                                <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="seats.requestSelect('<?= $seatid ?>')">
+                                    <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
+                                </td>
+<?php
+            } else {
+?>
+                                <td id="<?= $seatid ?>" class="seat">
+                                    <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
+                                </td>
+<?php
+            }
+        }
+?>
+                            </tr>
+<?php
+    }
+?>
                         </table>
-
-                        <?php if ($session->getStatus() === Session::STATUS_OK) { ?>
-                            <p>You are logged in as <?= $session->getUsername() ?></p>
-                        <?php } ?>
+<?php
+    if ($session->getStatus() === Session::STATUS_OK) { 
+?>
+                        <p>You are logged in as <?= $session->getUsername() ?></p>
+<?php
+    }
+?>
                     </div>
                     
                     <div class="statistics">
@@ -77,23 +105,35 @@
             </div>
         </div>
     </div>
-
-    <?php require_once "components/jscheck.php"; ?>
     
-    <script src="js/jquery-3.4.1.min.js"></script>
-    <script src="js/ajax.js"></script>
-    <script src="js/counter.js"></script>
-    <script src="js/seat.js"></script>
-    <script src="js/seatmap.js"></script>
+    <script type="application/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="application/javascript" src="js/ajax.js"></script>
+    <script type="application/javascript" src="js/counter.js"></script>
+    <script type="application/javascript" src="js/seat.js"></script>
+    <script type="application/javascript" src="js/seatmap.js"></script>
 
-    <script>
+    <script type="application/javascript">
         $(document).ready(function() {
-            <?php if ($session->getStatus() === Session::STATUS_EXPIRED) { ?>
-                alert("Expired session.");
-            <?php } ?>
-
+            if (!navigator.cookieEnabled) {
+                // Show the "Cookies are disabled" message
+                $("body").append("<div class=\"container\">Please, enable cookies to visit this page.</div>");
+            } else {
+                // Show the page contents
+                $("#main").removeClass("hidden");
+            }
+<?php
+    if ($session->getStatus() === Session::STATUS_EXPIRED) {
+?>
+            alert("Expired session.");
+<?php
+    }
+?>
             seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
         });
     </script>
+    <noscript>
+        <!-- Show the "Javascript is disabled" message -->
+        <div class="container">Please, enable Javascript to visit this page.</div>
+    </noscript>
 </body>
 </html>

@@ -6,7 +6,10 @@
 
 function SeatMap(data) {
     this.seats = {};
-    this.counter = new CounterController();
+
+    var counterModel = new CounterModel();
+    var counterView = new CounterView(counterModel, $("#freeSeats"), $("#selectedSeats"), $("#purchasedSeats"));
+    this.counter = new CounterController(counterModel, counterView);
 
     for (var seat in data) {
         var seatModel = new SeatModel(seat, data[seat]);

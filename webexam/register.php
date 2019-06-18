@@ -35,16 +35,35 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Airplane seats reservation</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
     <div class="container">
-        <?php require_once "components/header.php"; ?>
+        <header>
+            <h1><img class="icon-big" src="img/airplane.svg"><span>Airplane seats reservation system</span></h1>
+        </header>
     </div>
 
     <div id="main" class="container hidden">
         <div class="row">
-            <?php require_once"components/menu.php"; ?>
+            <div class="menu">
+                <h2>Menu</h2>
+                <a class="menu-element" href="."><img class="icon" src="img/home.svg"> <span>Home</span></a>
+<?php
+    if ($session->getStatus() !== Session::STATUS_OK) {
+?>
+                <a class="menu-element" href="login.php"><img class="icon" src="img/login.svg"> <span>Login</span></a>
+                <a class="menu-element" href="register.php"><img class="icon" src="img/register.svg"> <span>Register</span></a>
+<?php
+    } else {
+?>
+                <a class="menu-element" href="#" onclick="seats.requestUpdate();"><img class="icon" src="img/update.svg"> <span>Update</span></a>
+                <a class="menu-element" href="#" onclick="seats.requestPurchase();"><img class="icon" src="img/purchase.svg"> <span>Purchase</span></a>
+                <a class="menu-element" href="logout.php"><img class="icon" src="img/logout.svg"> <span>Logout</span></a>
+<?php
+    }
+?>
+            </div>
 
             <div class="contents">
                 <h2>Register</h2>
@@ -57,16 +76,30 @@
         </div>
     </div>
 
-    <?php require_once "components/jscheck.php"; ?>
-
-    <script src="js/jquery-3.4.1.min.js"></script>
-    <script src="js/login.js"></script>
-    <script>
+    <script type="application/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="application/javascript" src="js/login.js"></script>
+    <script type="application/javascript">
         $(document).ready(function() {
-            <?php if (!$msg->getSuccess()) { ?>
-                alert("<?= $msg->getMessage() ?>");
-            <?php } ?>
+            if (!navigator.cookieEnabled) {
+                // Show the "Cookies are disabled" message
+                $("body").append("<div class=\"container\">Please, enable cookies to visit this page.</div>");
+            } else {
+                // Show the page contents
+                $("#main").removeClass("hidden");
+            }
+
+<?php
+    if (isset($msg) && !$msg->getSuccess()) {
+?>
+            alert("<?= $msg->getMessage() ?>");
+<?php
+    } 
+?>
         });
     </script>
+    <noscript>
+        <!-- Show the "Javascript is disabled" message -->
+        <div class="container">Please, enable Javascript to visit this page.</div>
+    </noscript>
 </body>
 </html>
