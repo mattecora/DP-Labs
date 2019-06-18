@@ -45,8 +45,8 @@
 <?php
     } else {
 ?>
-                <a class="menu-element" href="#" onclick="seats.requestUpdate();"><img class="icon" src="img/update.svg"> <span>Update</span></a>
-                <a class="menu-element" href="#" onclick="seats.requestPurchase();"><img class="icon" src="img/purchase.svg"> <span>Purchase</span></a>
+                <a class="menu-element" href="#" onclick="airplane.requestUpdate();"><img class="icon" src="img/update.svg"> <span>Update</span></a>
+                <a class="menu-element" href="#" onclick="airplane.requestPurchase();"><img class="icon" src="img/purchase.svg"> <span>Purchase</span></a>
                 <a class="menu-element" href="logout.php"><img class="icon" src="img/logout.svg"> <span>Logout</span></a>
 <?php
     }
@@ -67,7 +67,7 @@
             $seatid = SeatMap::generateSeatNum($row, $place);
             if ($session->getStatus() === Session::STATUS_OK) {
 ?>
-                                <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="seats.requestSelect('<?= $seatid ?>')">
+                                <td id="<?= $seatid ?>" class="seat seat-clickable" onclick="airplane.requestSelect('<?= $seatid ?>')">
                                     <img class="icon" src="img/seat.svg"><span><?= $seatid ?></span>
                                 </td>
 <?php
@@ -110,11 +110,11 @@
     <script type="application/javascript" src="js/ajax.js"></script>
     <script type="application/javascript" src="js/counter.js"></script>
     <script type="application/javascript" src="js/seat.js"></script>
-    <script type="application/javascript" src="js/seatmap.js"></script>
-
+    
+    <script type="application/javascript" src="js/airplane.js"></script>
     <script type="application/javascript"><!--
-        var seats = undefined;
-        
+        var airplane = undefined;
+
         $(document).ready(function() {
             if (!navigator.cookieEnabled) {
                 // Show the "Cookies are disabled" message
@@ -130,7 +130,7 @@
 <?php
     }
 ?>
-            seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
+            airplane = new Airplane(<?= json_encode($seatmap->getData()) ?>);
         });
     //--></script>
     <noscript>

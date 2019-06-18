@@ -232,7 +232,7 @@
          */
         public function createUser($username, $password) {
             // Check username is a valid email
-            if (!preg_match("/^[a-zA-z0-9]+@[a-zA-z0-9]+\.[a-zA-z0-9]+$/", $username))
+            if (!preg_match("/^[a-zA-Z0-9\.\!\#\$\%\&\'\*\+\/\=\?\^\_\`\{\|\}\~\-]+@[a-zA-z0-9\-]+\.[a-zA-z0-9]+$/", $username))
                 return new Message(false, "Registration failed: invalid username provided.", null);
             
             // Check password format

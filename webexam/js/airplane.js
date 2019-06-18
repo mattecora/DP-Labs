@@ -1,10 +1,10 @@
 /**
-    seatmap.js
-    Provides the class for representing the cabin seat map, which handles user interactions
+    airplane.js
+    Provides the class for representing the airplane, which handles user interactions
     Matteo Corain - Distributed programming I - A.Y. 2018-19
 */
 
-function SeatMap(data) {
+function Airplane(data) {
     this.seats = {};
 
     var counterModel = new CounterModel();
@@ -20,7 +20,7 @@ function SeatMap(data) {
     this.counter.update(this.seats);
 }
 
-SeatMap.prototype.update = function(seats) {
+Airplane.prototype.update = function(seats) {
     // Update seats
     for (var seat in this.seats)
         this.seats[seat].update(seats[seat]);
@@ -29,7 +29,7 @@ SeatMap.prototype.update = function(seats) {
     this.counter.update(this.seats);
 };
 
-SeatMap.prototype.requestSelect = function(seat) {
+Airplane.prototype.requestSelect = function(seat) {
     var self = this;
 
     // Check if the seat is already purchased
@@ -48,7 +48,7 @@ SeatMap.prototype.requestSelect = function(seat) {
     });
 };
 
-SeatMap.prototype.requestUpdate = function() {
+Airplane.prototype.requestUpdate = function() {
     var self = this;
 
     // Retrieve the seat map
@@ -58,7 +58,7 @@ SeatMap.prototype.requestUpdate = function() {
     });
 };
 
-SeatMap.prototype.requestPurchase = function() {
+Airplane.prototype.requestPurchase = function() {
     var self = this;
     var toPurchase = [];
 

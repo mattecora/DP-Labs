@@ -10,7 +10,7 @@ function checkRegistration() {
     var password = $("#password").val();
 
     // Check username is a valid email
-    if (!/^[a-zA-z0-9]+@[a-zA-z0-9]+\.[a-zA-z0-9]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9\.\!\#\$\%\&\'\*\+\/\=\?\^\_\`\{\|\}\~\-]+@[a-zA-z0-9\-]+\.[a-zA-z0-9]+$/.test(username)) {
         alert("Invalid username provided.");
         return false;
     }
