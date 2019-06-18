@@ -78,7 +78,7 @@
 
     <script type="application/javascript" src="js/jquery-3.4.1.min.js"></script>
     <script type="application/javascript" src="js/login.js"></script>
-    <script type="application/javascript">
+    <script type="application/javascript"><!--
         $(document).ready(function() {
             if (!navigator.cookieEnabled) {
                 // Show the "Cookies are disabled" message
@@ -96,7 +96,7 @@
     } 
 ?>
         });
-    </script>
+    //--></script>
     <noscript>
         <!-- Show the "Javascript is disabled" message -->
         <div class="container">Please, enable Javascript to visit this page.</div>

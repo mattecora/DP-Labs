@@ -112,7 +112,9 @@
     <script type="application/javascript" src="js/seat.js"></script>
     <script type="application/javascript" src="js/seatmap.js"></script>
 
-    <script type="application/javascript">
+    <script type="application/javascript"><!--
+        var seats = undefined;
+        
         $(document).ready(function() {
             if (!navigator.cookieEnabled) {
                 // Show the "Cookies are disabled" message
@@ -130,7 +132,7 @@
 ?>
             seats = new SeatMap(<?= json_encode($seatmap->getData()) ?>);
         });
-    </script>
+    //--></script>
     <noscript>
         <!-- Show the "Javascript is disabled" message -->
         <div class="container">Please, enable Javascript to visit this page.</div>
