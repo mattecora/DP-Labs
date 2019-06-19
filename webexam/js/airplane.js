@@ -8,7 +8,7 @@ function Airplane(data) {
     this.seats = {};
 
     var counterModel = new CounterModel();
-    var counterView = new CounterView(counterModel, $("#freeSeats"), $("#selectedSeats"), $("#purchasedSeats"));
+    var counterView = new CounterView(counterModel, $("#freeSeats"), $("#reservedSeats"), $("#purchasedSeats"));
     this.counter = new CounterController(counterModel, counterView);
 
     for (var seat in data) {
