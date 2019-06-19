@@ -23,6 +23,8 @@
         
             if ($this->db->connect_error)
                 die("Database connect error (" . $this->db->connect_errno . ") " . $this->db->connect_error);
+
+            $this->db->autocommit(false);
         }
 
         /**
@@ -54,6 +56,11 @@
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
             $stmt->fetch();
+
+            if (!isset($status) || !isset($reserver)) {
+                $status = Seat::FREE;
+                $reserver = null;
+            }
     
             return new Message(true, null, new Seat($seat_num, $status, $reserver));
         }
@@ -79,6 +86,11 @@
             // Read the status and return the seat object
             $stmt->bind_result($status, $reserver);
             $stmt->fetch();
+
+            if (!isset($status) || !isset($reserver)) {
+                $status = Seat::FREE;
+                $reserver = null;
+            }
 
             return new Message(true, null, new Seat($seat_num, $status, $reserver));
         }
@@ -136,7 +148,7 @@
             // Prepare the query
             if ($seat->getData()->getStatus() === Seat::SELECTED) {
                 // Seat selected by the user, delete reservation
-                $stmt = $this->db->prepare("UPDATE airplane SET status = 0, reserver = NULL WHERE seat = ?");
+                $stmt = $this->db->prepare("DELETE FROM airplane WHERE seat = ?");
                 $stmt->bind_param("s", $seat_num);
                 $msg = "Seat freed: $seat_num.";
             } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
@@ -146,8 +158,8 @@
                 $msg = "Seat selected from another user: $seat_num.";
             } else {
                 // Seat free, insert reservation
-                $stmt = $this->db->prepare("UPDATE airplane SET status = 1, reserver = ? WHERE seat = ?");
-                $stmt->bind_param("ss", $user, $seat_num);
+                $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 1, ?)");
+                $stmt->bind_param("ss", $seat_num, $user);
                 $msg = "Seat selected: $seat_num.";
             }
             
@@ -155,7 +167,7 @@
             $res = $stmt->execute();
             if (!$res) {
                 $this->db->rollback();
-                return new Message(false, "Database error: " . $this->db->error . ".", null);
+                return new Message(false, "Database error: " . $stmt->errno . ".", null);
             }
 
             // Commit the transaction
@@ -194,26 +206,26 @@
 
             if (empty($invalid_seats)) {
                 // Set places as purchased
-                $stmt = $this->db->prepare("UPDATE airplane SET status = 2 WHERE seat = ?");
+                $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 2, ?) ON DUPLICATE KEY UPDATE status = 2");
                 
                 foreach ($seats as $seat_num) {
-                    $stmt->bind_param("s", $seat_num);
+                    $stmt->bind_param("ss", $seat_num, $user);
                     
                     $res = $stmt->execute();
                     if (!$res) {
                         $this->db->rollback();
-                        return new Message(false, "Database error: " . $this->db->error . ".", null);
+                        return new Message(false, "Database error: " . $stmt->errno . ".", null);
                     }
                 }
             } else {
                 // Free all places
-                $stmt = $this->db->prepare("UPDATE airplane SET status = 0, reserver = NULL WHERE status = 1 AND reserver = ?");
+                $stmt = $this->db->prepare("DELETE FROM airplane WHERE status = 1 AND reserver = ?");
                 $stmt->bind_param("s", $user);
                 
                 $res = $stmt->execute();
                 if (!$res) {
                     $this->db->rollback();
-                    return new Message(false, "Database error: " . $this->db->error . ".", null);
+                    return new Message(false, "Database error: " . $stmt->errno . ".", null);
                 }
             }
 

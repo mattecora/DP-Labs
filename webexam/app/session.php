@@ -19,12 +19,6 @@
          * Starts the session, checks the time difference and sets the status
          */
         public function __construct() {
-            // Enforce HTTPS usage
-            if (!isset($_SERVER["HTTPS"])) {
-                header("Location: https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"]);
-                exit;
-            }
-            
             // Start the session
             if (session_status() === PHP_SESSION_NONE)
                 session_start();

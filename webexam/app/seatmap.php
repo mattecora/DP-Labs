@@ -10,7 +10,7 @@
     class SeatMap implements JsonSerializable {
         const ROWS = 10;
         const PLACES = 6;
-
+        
         private $seatmap;
 
         public function __construct() {
@@ -20,7 +20,7 @@
             for ($row = 0; $row < SeatMap::ROWS; $row++) {
                 for ($place = 0; $place < SeatMap::PLACES; $place++) {
                     $seat_num = SeatMap::generateSeatNum($row, $place);
-                    $this->seatmap[$seat_num] = new Seat($seat_num, Seat::INVALID, null);
+                    $this->seatmap[$seat_num] = new Seat($seat_num, Seat::FREE, null);
                 }
             }
         }

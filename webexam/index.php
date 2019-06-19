@@ -6,10 +6,13 @@
 
 <?php
     require_once "app/airplane.php";
+    require_once "app/https.php";
     require_once "app/seatmap.php";
     require_once "app/session.php";
 
     $session = new Session();
+    if ($session->getStatus() === Session::STATUS_OK)
+        enforce_https();
 
     $airplane = new Airplane();
     $seatmap = $airplane->getSeatStatusAll();

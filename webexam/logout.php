@@ -5,7 +5,10 @@
 -->
 
 <?php
+    require_once "app/https.php";
     require_once "app/session.php";
+
+    enforce_https();
 
     $session = new Session();
 
