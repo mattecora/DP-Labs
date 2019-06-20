@@ -72,8 +72,8 @@
             <div class="contents">
                 <h2>Register</h2>
                 <form action="register.php" method="post" onsubmit="return checkRegistration();">
-                    <input type="email" name="username" id="username" placeholder="Username">
-                    <input type="password" name="password" id="password" placeholder="Password">
+                    <input type="email" name="username" id="username" placeholder="Username" required>
+                    <input type="password" name="password" id="password" placeholder="Password" required>
                     <input type="submit" value="Register">
                 </form>
             </div>

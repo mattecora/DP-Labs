@@ -10,10 +10,16 @@
     require_once "app/seatmap.php";
     require_once "app/session.php";
 
+    // Check session status
     $session = Session::get(true);
     if ($session->getStatus() === Session::STATUS_OK)
         enforce_https();
+    else if ($session->getStatus() === Session::STATUS_EXPIRED) {
+        header("Location: login.php?expired");
+        exit;
+    }
 
+    // Retrieve the seatmap
     $airplane = Airplane::get();
     $seatmap = $airplane->getSeatStatusAll();
 ?>
@@ -126,13 +132,6 @@
                 // Show the page contents
                 $("#main").removeClass("hidden");
             }
-<?php
-    if ($session->getStatus() === Session::STATUS_EXPIRED) {
-?>
-            alert("Expired session.");
-<?php
-    }
-?>
             airplane = new Airplane(<?= json_encode($seatmap->getData()) ?>);
         });
     //--></script>

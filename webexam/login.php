@@ -72,8 +72,8 @@
             <div class="contents">
                 <h2>Login</h2>
                 <form action="login.php" method="post">
-                    <input type="email" name="username" id="username" placeholder="Username">
-                    <input type="password" name="password" id="password" placeholder="Password">
+                    <input type="email" name="username" id="username" placeholder="Username" required>
+                    <input type="password" name="password" id="password" placeholder="Password" required>
                     <input type="submit" value="Login" class="button">
                 </form>
             </div>
@@ -97,7 +97,12 @@
 ?>
             alert("<?= $msg->getMessage() ?>");
 <?php
-    } 
+    }
+    if (isset($_GET["expired"])) {
+?>
+            alert("Expired session.");
+<?php
+    }
 ?>
         });
     //--></script>
