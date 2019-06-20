@@ -16,7 +16,7 @@
 
     if (isset($_POST["username"]) && isset($_POST["password"])) {
         // Open the DB
-        $airplane = new Airplane();
+        $airplane = Airplane::get();
 
         // Create the new user
         $msg = $airplane->createUser($_POST["username"], $_POST["password"]);

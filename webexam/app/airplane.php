@@ -12,18 +12,44 @@
     require_once "session.php";
 
     class Airplane {
+        const STMT_GET_SEAT = 0;
+        const STMT_GET_SEAT_FOR_UPDATE = 1;
+        const STMT_GET_SEAT_ALL = 2;
+        const STMT_ADD_RESERVATION = 3;
+        const STMT_UPD_RESERVATION = 4;
+        const STMT_DEL_RESERVATION = 5;
+        const STMT_ADD_USER = 6;
+        const STMT_CHECK_PASSWORD = 7;
+
+        const STMT_SQL_CODE = array(
+            Airplane::STMT_GET_SEAT => "SELECT status, reserver FROM airplane WHERE seat = ?",
+            Airplane::STMT_GET_SEAT_FOR_UPDATE => "SELECT status, reserver FROM airplane WHERE seat = ? FOR UPDATE",
+            Airplane::STMT_GET_SEAT_ALL => "SELECT * FROM airplane",
+            Airplane::STMT_ADD_RESERVATION => "INSERT INTO airplane VALUES (?, ?, ?)",
+            Airplane::STMT_UPD_RESERVATION => "UPDATE airplane SET status = ?, reserver = ? WHERE seat = ?",
+            Airplane::STMT_DEL_RESERVATION => "DELETE FROM airplane WHERE seat = ?",
+            Airplane::STMT_ADD_USER => "INSERT INTO users VALUES (?, ?)",
+            Airplane::STMT_CHECK_PASSWORD => "SELECT password FROM users WHERE username = ?"
+        );
+
         private $db;
+        private $queries;
+
+        private static $airplane;
 
         /**
          * __construct()
          * Creates a new database object and checks for connection errors.
          */
-        public function __construct() {
+        private function __construct() {
+            // Connect to the database
             $this->db = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         
+            // Check connect errors
             if ($this->db->connect_error)
                 die("Database connect error (" . $this->db->connect_errno . ") " . $this->db->connect_error);
 
+            // Set autocommit mode
             $this->db->autocommit(false);
         }
 
@@ -32,7 +58,24 @@
          * Closes the database connection.
          */
         public function __destruct() {
+            // Close all queries
+            foreach ($this->queries as $stmt)
+                $stmt->close();
+
+            // Close database
             $this->db->close();
+        }
+
+        public static function get() {
+            if (!isset(Airplane::$airplane))
+                Airplane::$airplane = new Airplane();
+            return Airplane::$airplane;
+        }
+
+        private function getOrPrepareQuery($stmt_num) {
+            if (!isset($this->queries[$stmt_num]))
+                $this->queries[$stmt_num] = $this->db->prepare(Airplane::STMT_SQL_CODE[$stmt_num]);
+            return $this->queries[$stmt_num];
         }
 
         /**
@@ -45,7 +88,7 @@
                 return new Message(false, "Invalid seat number: $seat_num.", null);
 
             // Prepare the query
-            $stmt = $this->db->prepare("SELECT status, reserver FROM airplane WHERE seat = ?");
+            $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT);
             $stmt->bind_param("s", $seat_num);
             
             // Execute the query and check results
@@ -61,6 +104,9 @@
                 $status = Seat::FREE;
                 $reserver = null;
             }
+
+            // Free the statements results
+            $stmt->free_result();
     
             return new Message(true, null, new Seat($seat_num, $status, $reserver));
         }
@@ -75,7 +121,7 @@
                 return new Message(false, "Invalid seat number: $seat_num.", null);
             
             // Prepare the query
-            $stmt = $this->db->prepare("SELECT status, reserver FROM airplane WHERE seat = ? FOR UPDATE");
+            $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT_FOR_UPDATE);
             $stmt->bind_param("s", $seat_num);
             
             // Execute the query and check results
@@ -92,6 +138,8 @@
                 $reserver = null;
             }
 
+            $stmt->free_result();
+
             return new Message(true, null, new Seat($seat_num, $status, $reserver));
         }
     
@@ -103,7 +151,7 @@
             $seatmap = new SeatMap();
     
             // Run the query on the DB
-            $stmt = $this->db->prepare("SELECT * FROM airplane");
+            $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT_ALL);
             $res = $stmt->execute();
             if (!$res)
                 return new Message(false, "Database error: " . $stmt->errno . ".", null);
@@ -112,6 +160,9 @@
             $stmt->bind_result($seat_num, $status, $reserver);
             while ($stmt->fetch())
                 $seatmap->updateSeat(new Seat($seat_num, $status, $reserver));
+            
+            // Free the statements results
+            $stmt->free_result();
     
             return new Message(true, null, $seatmap);
         }
@@ -127,6 +178,7 @@
                 return new Message(false, "User session is not valid.", null);
             
             $user = $session->getUsername();
+            $status = Seat::RESERVED;
 
             // Check seat correctness
             if (!SeatMap::checkSeatNum($seat_num))
@@ -148,18 +200,18 @@
             // Prepare the query
             if ($seat->getData()->getStatus() === Seat::SELECTED) {
                 // Seat selected by the user, delete reservation
-                $stmt = $this->db->prepare("DELETE FROM airplane WHERE seat = ?");
+                $stmt = $this->getOrPrepareQuery(Airplane::STMT_DEL_RESERVATION);
                 $stmt->bind_param("s", $seat_num);
                 $msg = "Seat freed: $seat_num.";
             } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
                 // Seat selected by another user, update reservation
-                $stmt = $this->db->prepare("UPDATE airplane SET reserver = ? WHERE seat = ?");
-                $stmt->bind_param("ss", $user, $seat_num);
+                $stmt = $this->getOrPrepareQuery(Airplane::STMT_UPD_RESERVATION);
+                $stmt->bind_param("iss", $status, $user, $seat_num);
                 $msg = "Seat selected from another user: $seat_num.";
             } else {
                 // Seat free, insert reservation
-                $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 1, ?)");
-                $stmt->bind_param("ss", $seat_num, $user);
+                $stmt = $this->getOrPrepareQuery(Airplane::STMT_ADD_RESERVATION);
+                $stmt->bind_param("sis", $seat_num, $status, $user);
                 $msg = "Seat selected: $seat_num.";
             }
             
@@ -169,6 +221,9 @@
                 $this->db->rollback();
                 return new Message(false, "Database error: " . $stmt->errno . ".", null);
             }
+
+            // Free the statements results
+            $stmt->free_result();
 
             // Commit the transaction
             $this->db->commit();
@@ -187,6 +242,7 @@
                 return new Message(false, "User session is not valid.", null);
             
             $user = $session->getUsername();
+            $status = Seat::PURCHASED;
             
             // If no seat is requested, immediately return
             if (empty($seats))
@@ -195,38 +251,68 @@
             // Begin the transaction
             $this->db->begin_transaction();
 
+            $add_seats = array();
+            $upd_seats = array();
             $invalid_seats = array();
 
             // Check status of all places
             foreach ($seats as $seat_num) {
                 $seat = $this->getSeatStatusForUpdate($seat_num);
-                if ($seat->getData()->getStatus() !== Seat::SELECTED && $seat->getData()->getStatus() !== Seat::FREE)
+                    
+                if ($seat->getData()->getStatus() === Seat::FREE)
+                    $add_seats[] = $seat->getData()->getSeatNum();
+                else if ($seat->getData()->getStatus() === Seat::SELECTED)
+                    $upd_seats[] = $seat->getData()->getSeatNum();
+                else
                     $invalid_seats[] = $seat->getData()->getSeatNum();
             }
 
             if (empty($invalid_seats)) {
-                // Set places as purchased
-                $stmt = $this->db->prepare("INSERT INTO airplane VALUES (?, 2, ?) ON DUPLICATE KEY UPDATE status = 2");
+                // Prepare queries
+                $stmt_add = $this->getOrPrepareQuery(Airplane::STMT_ADD_RESERVATION);
+                $stmt_upd = $this->getOrPrepareQuery(Airplane::STMT_UPD_RESERVATION);
                 
-                foreach ($seats as $seat_num) {
-                    $stmt->bind_param("ss", $seat_num, $user);
+                foreach ($add_seats as $seat_num) {
+                    $stmt_add->bind_param("sis", $seat_num, $status, $user);
                     
-                    $res = $stmt->execute();
+                    $res = $stmt_add->execute();
                     if (!$res) {
                         $this->db->rollback();
-                        return new Message(false, "Database error: " . $stmt->errno . ".", null);
+                        return new Message(false, "Database error: " . $stmt_add->errno . ".", null);
                     }
                 }
+
+                // Free the statements results
+                $stmt_add->free_result();
+
+                foreach ($upd_seats as $seat_num) {
+                    $stmt_upd->bind_param("iss", $status, $user, $seat_num);
+                    
+                    $res = $stmt_upd->execute();
+                    if (!$res) {
+                        $this->db->rollback();
+                        return new Message(false, "Database error: " . $stmt_upd->errno . ".", null);
+                    }
+                }
+
+                // Free the statements results
+                $stmt_upd->free_result();
             } else {
                 // Free all places
-                $stmt = $this->db->prepare("DELETE FROM airplane WHERE status = 1 AND reserver = ?");
-                $stmt->bind_param("s", $user);
-                
-                $res = $stmt->execute();
-                if (!$res) {
-                    $this->db->rollback();
-                    return new Message(false, "Database error: " . $stmt->errno . ".", null);
+                $stmt_del = $this->getOrPrepareQuery(Airplane::STMT_DEL_RESERVATION);
+
+                foreach ($upd_seats as $seat_num) {
+                    $stmt_del->bind_param("s", $seat_num);
+                    
+                    $res = $stmt_del->execute();
+                    if (!$res) {
+                        $this->db->rollback();
+                        return new Message(false, "Database error: " . $stmt_del->errno . ".", null);
+                    }
                 }
+
+                // Free the statements results
+                $stmt_del->free_result();
             }
 
             // Commit the transaction
@@ -258,7 +344,7 @@
             $this->db->begin_transaction();
 
             // Prepare the query
-            $stmt = $this->db->prepare("INSERT INTO users VALUES (?, ?)");
+            $stmt = $this->getOrPrepareQuery(Airplane::STMT_ADD_USER);
             $stmt->bind_param("ss", $username, $enc_passw);
 
             // Execute the query and check results
@@ -273,6 +359,9 @@
                     return new Message(false, "Registration failed: database error ($stmt->errno).", null);
             }
 
+            // Free the statements results
+            $stmt->free_result();
+
             // Commit the transaction
             $this->db->commit();
 
@@ -285,7 +374,7 @@
          */
         public function checkUser($username, $password) {
             // Prepare the query
-            $stmt = $this->db->prepare("SELECT password FROM users WHERE username = ?");
+            $stmt = $this->getOrPrepareQuery(Airplane::STMT_CHECK_PASSWORD);
             $stmt->bind_param("s", $username);
 
             // Execute the query and check results
@@ -296,6 +385,9 @@
             // Read the encoded password
             $stmt->bind_result($enc_passw);
             $stmt->fetch();
+
+            // Free the statements results
+            $stmt->free_result();
             
             // Check the password
             if (!isset($enc_passw) || !password_verify($password, $enc_passw))

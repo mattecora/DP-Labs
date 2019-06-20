@@ -20,11 +20,11 @@
     
     if (isset($_POST["seat"])) {
         // Create a database connection and get seat status
-        $airplane = new Airplane();
+        $airplane = Airplane::get();
         echo json_encode($airplane->getSeatStatus($_POST["seat"]));
     } else {
         // Create a database connection and get status of all seats
-        $airplane = new Airplane();
+        $airplane = Airplane::get();
         echo json_encode($airplane->getSeatStatusAll());
     }
 ?>

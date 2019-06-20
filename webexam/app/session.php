@@ -60,7 +60,7 @@
         }
 
         public static function get($readonly) {
-            if (Session::$session === null)
+            if (!isset(Session::$session))
                 Session::$session = new Session($readonly);
             return Session::$session;
         }

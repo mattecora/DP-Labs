@@ -14,7 +14,7 @@
     if ($session->getStatus() === Session::STATUS_OK)
         enforce_https();
 
-    $airplane = new Airplane();
+    $airplane = Airplane::get();
     $seatmap = $airplane->getSeatStatusAll();
 ?>
 

@@ -20,7 +20,7 @@
     
     if (isset($_POST["seats"])) {
         // Create a database connection and perform purchase
-        $airplane = new Airplane();
+        $airplane = Airplane::get();
         echo json_encode($airplane->purchaseSeats($_POST["seats"]));
     } else {
         // Otherwise, bad request

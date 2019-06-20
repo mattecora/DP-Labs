@@ -16,7 +16,7 @@
 
     if (isset($_POST["username"]) && isset($_POST["password"])) {
         // Open the DB and add new user
-        $airplane = new Airplane();
+        $airplane = Airplane::get();
 
         // Verify login info
         $msg = $airplane->checkUser($_POST["username"], $_POST["password"]);
