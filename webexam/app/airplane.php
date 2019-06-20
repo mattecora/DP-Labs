@@ -155,11 +155,11 @@
             // Run the query on the DB
             $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT_ALL);
             if (!$stmt || !$stmt->execute())
-                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
+                return new Message(false, "Seatmap retrieval failed: database error ($stmt->errno).", null);
     
             // Bind results
             if (!$stmt->bind_result($seat_num, $status, $reserver))
-                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
+                return new Message(false, "Seatmap retrieval failed: database error ($stmt->errno).", null);
             
             // Fetch all results and fill the seat map
             while ($stmt->fetch())
@@ -168,7 +168,7 @@
             // Free the statements results
             $stmt->free_result();
     
-            return new Message(true, "Seat retrieval successful.", $seatmap);
+            return new Message(true, "Seatmap retrieval successful.", $seatmap);
         }
 
         /**

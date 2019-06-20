@@ -35,7 +35,7 @@ Airplane.prototype.requestSelect = function(seat) {
     // Check seat status
     if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
         // Seat is purchased, fail
-        alert("This seat is already purchased.");
+        alert("Seat selection failed: " + seat + " already purchased.");
         return;
     } else if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED) {
         // Seat is selected, free it
