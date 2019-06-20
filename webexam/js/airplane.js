@@ -32,20 +32,30 @@ Airplane.prototype.update = function(seats) {
 Airplane.prototype.requestSelect = function(seat) {
     var self = this;
 
-    // Check if the seat is already purchased
+    // Check seat status
     if (this.seats[seat].seatModel.getStatus() === STATUS_PURCHASED) {
-        alert("Seat already purchased: " + seat + ".");
+        // Seat is purchased, fail
+        alert("This seat is already purchased.");
         return;
+    } else if (this.seats[seat].seatModel.getStatus() === STATUS_SELECTED) {
+        // Seat is selected, free it
+        ajaxFreeSeat(seat, function(data) {
+            // Update model and view
+            self.seats[seat].update(data[seat]);
+
+            // Update counters
+            self.counter.update(self.seats);
+        });
+    } else {
+        // Seat is free or reserved, select it
+        ajaxReserveSeat(seat, function(data) {
+            // Update model and view
+            self.seats[seat].update(data[seat]);
+    
+            // Update counters
+            self.counter.update(self.seats);
+        });
     }
-
-    // Try to purchase the seat
-    ajaxReserveSeat(seat, function(data) {
-        // Update model and view
-        self.seats[seat].update(data[seat]);
-
-        // Update counters
-        self.counter.update(self.seats);
-    });
 };
 
 Airplane.prototype.requestUpdate = function() {

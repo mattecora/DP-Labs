@@ -50,7 +50,7 @@
         public static function generateSeatNum($row, $place) {
             // Check boundaries and generate seat number
             if ($row >= 0 && $row < SeatMap::ROWS && $place >= 0 && $place < SeatMap::PLACES)
-                return chr($place + ord('A')). ($row + 1);
+                return chr($place + ord('A')) . ($row + 1);
             return null;
         }
 

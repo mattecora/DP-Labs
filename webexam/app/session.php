@@ -59,6 +59,10 @@
                 session_write_close();
         }
 
+        /**
+         * get()
+         * Get the singleton instance of the class.
+         */
         public static function get($readonly) {
             if (!isset(Session::$session))
                 Session::$session = new Session($readonly);

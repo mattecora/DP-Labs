@@ -66,12 +66,20 @@
             $this->db->close();
         }
 
+        /**
+         * get()
+         * Get the singleton instance of the class.
+         */
         public static function get() {
             if (!isset(Airplane::$airplane))
                 Airplane::$airplane = new Airplane();
             return Airplane::$airplane;
         }
 
+        /**
+         * getOrPrepareQuery()
+         * Prepare a statement or return it if already available.
+         */
         private function getOrPrepareQuery($stmt_num) {
             if (!isset($this->queries[$stmt_num]))
                 $this->queries[$stmt_num] = $this->db->prepare(Airplane::STMT_SQL_CODE[$stmt_num]);
@@ -190,17 +198,7 @@
             }
     
             // Prepare the query
-            if ($seat->getData()->getStatus() === Seat::SELECTED) {
-                // Seat selected by the user, delete reservation
-                $stmt = $this->getOrPrepareQuery(Airplane::STMT_DEL_RESERVATION);
-
-                if (!$stmt || !$stmt->bind_param("s", $seat_num)) {
-                    $this->db->rollback();
-                    return new Message(false, "Seat selection failed: database error ($stmt->errno).", null);
-                }
-                
-                $msg = "Seat selection successful: $seat_num freed.";
-            } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
+            if ($seat->getData()->getStatus() === Seat::RESERVED) {
                 // Seat selected by another user, update reservation
                 $stmt = $this->getOrPrepareQuery(Airplane::STMT_UPD_RESERVATION);
 
@@ -210,7 +208,7 @@
                 }
                 
                 $msg = "Seat selection successful: $seat_num selected from another user.";
-            } else {
+            } else if ($seat->getData()->getStatus() === Seat::FREE) {
                 // Seat free, insert reservation
                 $stmt = $this->getOrPrepareQuery(Airplane::STMT_ADD_RESERVATION);
 
@@ -223,7 +221,7 @@
             }
             
             // Execute the query and check results
-            if (!$stmt->execute()) {
+            if (isset($stmt) && !$stmt->execute()) {
                 $this->db->rollback();
                 return new Message(false, "Seat selection failed: database error ($stmt->errno).", null);
             }
@@ -235,6 +233,61 @@
             $this->db->commit();
     
             return new Message(true, $msg, $this->getSeatStatus($seat_num)->getData());
+        }
+
+        /**
+         * freeSeat()
+         * Free a seat in the airplane.
+         */
+        public function freeSeat($seat_num) {
+            // Check that the user has logged in
+            $session = Session::get(true);
+            if ($session->getStatus() != Session::STATUS_OK)
+                return new Message(false, "Seat release failed: user session is not valid.", null);
+            
+            $user = $session->getUsername();
+            $status = Seat::FREE;
+
+            // Begin the transaction
+            $this->db->begin_transaction();
+            
+            // Check the current seat status
+            $seat = $this->getSeatStatusForUpdate($seat_num);
+            if (!$seat->getSuccess()) {
+                $this->db->rollback();
+                return $seat;
+            } else if ($seat->getData()->getStatus() === Seat::PURCHASED) {
+                $this->db->rollback();
+                return new Message(false, "Seat release failed: $seat_num already purchased.", $seat->getData());
+            } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
+                $this->db->rollback();
+                return new Message(false, "Seat release failed: $seat_num is reserved by someone else.", $seat->getData());
+            }
+    
+            // Prepare the query
+            if ($seat->getData()->getStatus() === Seat::SELECTED) {
+                // Seat selected by the user, delete reservation
+                $stmt = $this->getOrPrepareQuery(Airplane::STMT_DEL_RESERVATION);
+
+                if (!$stmt || !$stmt->bind_param("s", $seat_num)) {
+                    $this->db->rollback();
+                    return new Message(false, "Seat release failed: database error ($stmt->errno).", null);
+                }
+
+                // Execute the query and check results
+                if (!$stmt->execute()) {
+                    $this->db->rollback();
+                    return new Message(false, "Seat release failed: database error ($stmt->errno).", null);
+                }
+
+                // Free the statements results
+                $stmt->free_result();
+            }
+
+            // Commit the transaction
+            $this->db->commit();
+    
+            return new Message(true, "Seat release successful: $seat_num freed.", $this->getSeatStatus($seat_num)->getData());
         }
 
         /**
