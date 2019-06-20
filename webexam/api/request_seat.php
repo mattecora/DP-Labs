@@ -8,7 +8,7 @@
     require_once "../app/airplane.php";
     require_once "../app/session.php";
 
-    $session = new Session();
+    $session = Session::get(true);
     header("Content-Type: application/json");
 
     // Check user login

@@ -10,7 +10,7 @@
     require_once "app/seatmap.php";
     require_once "app/session.php";
 
-    $session = new Session();
+    $session = Session::get(true);
     if ($session->getStatus() === Session::STATUS_OK)
         enforce_https();
 
@@ -91,7 +91,7 @@
 <?php
     if ($session->getStatus() === Session::STATUS_OK) { 
 ?>
-                        <p>You are logged in as <?= $session->getUsername() ?></p>
+                        <p>You are logged in as <?= htmlentities($session->getUsername()) ?></p>
 <?php
     }
 ?>

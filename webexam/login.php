@@ -11,7 +11,8 @@
 
     enforce_https();
 
-    $session = new Session();
+    // Open session
+    $session = Session::get(false);
 
     if (isset($_POST["username"]) && isset($_POST["password"])) {
         // Open the DB and add new user

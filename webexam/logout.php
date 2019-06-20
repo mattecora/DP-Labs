@@ -10,7 +10,8 @@
 
     enforce_https();
 
-    $session = new Session();
+    // Open session
+    $session = Session::get(false);
 
     // If session is still valid, logout
     if ($session->getStatus() === Session::STATUS_OK)

@@ -122,7 +122,7 @@
          */
         public function requestSeat($seat_num) {
             // Check that the user has logged in
-            $session = new Session();
+            $session = Session::get(true);
             if ($session->getStatus() != Session::STATUS_OK)
                 return new Message(false, "User session is not valid.", null);
             
@@ -182,7 +182,7 @@
          */
         public function purchaseSeats($seats) {
             // Check that the user has logged in
-            $session = new Session();
+            $session = Session::get(true);
             if ($session->getStatus() != Session::STATUS_OK)
                 return new Message(false, "User session is not valid.", null);
             
@@ -290,10 +290,8 @@
 
             // Execute the query and check results
             $res = $stmt->execute();
-            if (!$res) {
-                $this->db->rollback();
+            if (!$res)
                 return new Message(false, "Login failed: database error ($stmt->errno).", null);
-            }
 
             // Read the encoded password
             $stmt->bind_result($enc_passw);

@@ -13,19 +13,24 @@
         const STATUS_NONE = 2;
 
         private $status;
+        private $username;
+        private $last;
+        private static $session;
 
         /**
          * __construct()
          * Starts the session, checks the time difference and sets the status
          */
-        public function __construct() {
+        private function __construct($readonly) {
             // Start the session
             if (session_status() === PHP_SESSION_NONE)
                 session_start();
 
-            // User has not logged in
+            // Check user login
             if (!isset($_SESSION["username"]) || !isset($_SESSION["last"])) {
                 $this->status = Session::STATUS_NONE;
+                $this->username = null;
+                $this->last = null;
                 return;
             }
 
@@ -36,12 +41,28 @@
             if ($delta > Session::TIMEOUT) {
                 $this->logout();
                 $this->status = Session::STATUS_EXPIRED;
+                $this->username = null;
+                $this->last = null;
                 return;
             }
             
             // Everything ok, update time
             $_SESSION["last"] = time();
             $this->status = Session::STATUS_OK;
+
+            // Set the instance variables
+            $this->username = $_SESSION["username"];
+            $this->last = $_SESSION["last"];
+
+            // If session is read-only, write close
+            if ($readonly)
+                session_write_close();
+        }
+
+        public static function get($readonly) {
+            if (Session::$session === null)
+                Session::$session = new Session($readonly);
+            return Session::$session;
         }
 
         /**
@@ -57,7 +78,7 @@
          * Returns the username of the logged user
          */
         public function getUsername() {
-            return $_SESSION["username"];
+            return $this->username;
         }
 
         /**
@@ -65,7 +86,7 @@
          * Returns the last access time of the logged user
          */
         public function getLastAccess() {
-            return $_SESSION["last"];
+            return $this->last;
         }
 
         /**
@@ -77,8 +98,10 @@
             $_SESSION["username"] = $username;
             $_SESSION["last"] = time();
 
-            // Set the session status
+            // Set the instance variables
             $this->status = Session::STATUS_OK;
+            $this->username = $_SESSION["username"];
+            $this->last = $_SESSION["last"];
         }
 
         /**
@@ -101,8 +124,10 @@
             // Destroy the session
             session_destroy();
 
-            // Set the session status
+            // Set the instance variables
             $this->status = Session::STATUS_NONE;
+            $this->username = null;
+            $this->last = null;
         }
     }
 ?>
