@@ -85,22 +85,19 @@
         public function getSeatStatus($seat_num) {
             // Check seat correctness
             if (!SeatMap::checkSeatNum($seat_num))
-                return new Message(false, "Invalid seat number: $seat_num.", null);
+                return new Message(false, "Seat retrieval failed: invalid seat number ($seat_num).", null);
 
-            // Prepare the query
+            // Prepare the query and bind parameters
             $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT);
-            $stmt->bind_param("s", $seat_num);
+            if (!$stmt || !$stmt->bind_param("s", $seat_num))
+                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
             
-            // Execute the query and check results
-            $res = $stmt->execute();
-            if (!$res)
-                return new Message(false, "Database error: " . $stmt->errno. ".", null);
+            // Execute the query and bind results
+            if (!$stmt->execute() || !$stmt->bind_result($status, $reserver))
+                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
 
-            // Read the status and return the seat object
-            $stmt->bind_result($status, $reserver);
-            $stmt->fetch();
-
-            if (!isset($status) || !isset($reserver)) {
+            // Check if seat is in database, otherwise it is free
+            if (!$stmt->fetch()) {
                 $status = Seat::FREE;
                 $reserver = null;
             }
@@ -108,7 +105,7 @@
             // Free the statements results
             $stmt->free_result();
     
-            return new Message(true, null, new Seat($seat_num, $status, $reserver));
+            return new Message(true, "Seat retrieval successful: $seat_num.", new Seat($seat_num, $status, $reserver));
         }
 
         /**
@@ -118,29 +115,26 @@
         public function getSeatStatusForUpdate($seat_num) {
             // Check seat correctness
             if (!SeatMap::checkSeatNum($seat_num))
-                return new Message(false, "Invalid seat number: $seat_num.", null);
+                return new Message(false, "Seat retrieval failed: invalid seat number ($seat_num).", null);
             
             // Prepare the query
             $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT_FOR_UPDATE);
-            $stmt->bind_param("s", $seat_num);
+            if (!$stmt || !$stmt->bind_param("s", $seat_num))
+                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
             
-            // Execute the query and check results
-            $res = $stmt->execute();
-            if (!$res)
-                return new Message(false, "Database error: " . $stmt->errno . ".", null);
+            // Execute the query and bind results
+            if (!$stmt->execute() || !$stmt->bind_result($status, $reserver))
+                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
 
-            // Read the status and return the seat object
-            $stmt->bind_result($status, $reserver);
-            $stmt->fetch();
-
-            if (!isset($status) || !isset($reserver)) {
+            // Check if seat is in database, otherwise it is free
+            if (!$stmt->fetch()) {
                 $status = Seat::FREE;
                 $reserver = null;
             }
 
             $stmt->free_result();
 
-            return new Message(true, null, new Seat($seat_num, $status, $reserver));
+            return new Message(true, "Seat retrieval successful: $seat_num.", new Seat($seat_num, $status, $reserver));
         }
     
         /**
@@ -152,19 +146,21 @@
     
             // Run the query on the DB
             $stmt = $this->getOrPrepareQuery(Airplane::STMT_GET_SEAT_ALL);
-            $res = $stmt->execute();
-            if (!$res)
-                return new Message(false, "Database error: " . $stmt->errno . ".", null);
+            if (!$stmt || !$stmt->execute())
+                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
     
-            // Loop through the results and fill the seat map
-            $stmt->bind_result($seat_num, $status, $reserver);
+            // Bind results
+            if (!$stmt->bind_result($seat_num, $status, $reserver))
+                return new Message(false, "Seat retrieval failed: database error ($stmt->errno).", null);
+            
+            // Fetch all results and fill the seat map
             while ($stmt->fetch())
                 $seatmap->updateSeat(new Seat($seat_num, $status, $reserver));
             
             // Free the statements results
             $stmt->free_result();
     
-            return new Message(true, null, $seatmap);
+            return new Message(true, "Seat retrieval successful.", $seatmap);
         }
 
         /**
@@ -175,51 +171,61 @@
             // Check that the user has logged in
             $session = Session::get(true);
             if ($session->getStatus() != Session::STATUS_OK)
-                return new Message(false, "User session is not valid.", null);
+                return new Message(false, "Seat selection failed: user session is not valid.", null);
             
             $user = $session->getUsername();
             $status = Seat::RESERVED;
-
-            // Check seat correctness
-            if (!SeatMap::checkSeatNum($seat_num))
-                return new Message(false, "Invalid seat number: $seat_num.", null);
 
             // Begin the transaction
             $this->db->begin_transaction();
             
             // Check the current seat status
             $seat = $this->getSeatStatusForUpdate($seat_num);
-            if ($seat->getSuccess() == false) {
+            if (!$seat->getSuccess()) {
                 $this->db->rollback();
                 return $seat;
             } else if ($seat->getData()->getStatus() === Seat::PURCHASED) {
                 $this->db->rollback();
-                return new Message(false, "Seat already purchased: $seat_num.", $seat->getData());
+                return new Message(false, "Seat selection failed: $seat_num already purchased.", $seat->getData());
             }
     
             // Prepare the query
             if ($seat->getData()->getStatus() === Seat::SELECTED) {
                 // Seat selected by the user, delete reservation
                 $stmt = $this->getOrPrepareQuery(Airplane::STMT_DEL_RESERVATION);
-                $stmt->bind_param("s", $seat_num);
-                $msg = "Seat freed: $seat_num.";
+
+                if (!$stmt || !$stmt->bind_param("s", $seat_num)) {
+                    $this->db->rollback();
+                    return new Message(false, "Seat selection failed: database error ($stmt->errno).", null);
+                }
+                
+                $msg = "Seat selection successful: $seat_num freed.";
             } else if ($seat->getData()->getStatus() === Seat::RESERVED) {
                 // Seat selected by another user, update reservation
                 $stmt = $this->getOrPrepareQuery(Airplane::STMT_UPD_RESERVATION);
-                $stmt->bind_param("iss", $status, $user, $seat_num);
-                $msg = "Seat selected from another user: $seat_num.";
+
+                if (!$stmt || !$stmt->bind_param("iss", $status, $user, $seat_num)) {
+                    $this->db->rollback();
+                    return new Message(false, "Seat selection failed: database error ($stmt->errno).", null);
+                }
+                
+                $msg = "Seat selection successful: $seat_num selected from another user.";
             } else {
                 // Seat free, insert reservation
                 $stmt = $this->getOrPrepareQuery(Airplane::STMT_ADD_RESERVATION);
-                $stmt->bind_param("sis", $seat_num, $status, $user);
-                $msg = "Seat selected: $seat_num.";
+
+                if (!$stmt || !$stmt->bind_param("sis", $seat_num, $status, $user)) {
+                    $this->db->rollback();
+                    return new Message(false, "Seat selection failed: database error ($stmt->errno).", null);
+                }
+
+                $msg = "Seat selection successful: $seat_num selected.";
             }
             
             // Execute the query and check results
-            $res = $stmt->execute();
-            if (!$res) {
+            if (!$stmt->execute()) {
                 $this->db->rollback();
-                return new Message(false, "Database error: " . $stmt->errno . ".", null);
+                return new Message(false, "Seat selection failed: database error ($stmt->errno).", null);
             }
 
             // Free the statements results
@@ -239,7 +245,7 @@
             // Check that the user has logged in
             $session = Session::get(true);
             if ($session->getStatus() != Session::STATUS_OK)
-                return new Message(false, "User session is not valid.", null);
+                return new Message(false, "Seats purchase failed: user session is not valid.", null);
             
             $user = $session->getUsername();
             $status = Seat::PURCHASED;
@@ -273,12 +279,9 @@
                 $stmt_upd = $this->getOrPrepareQuery(Airplane::STMT_UPD_RESERVATION);
                 
                 foreach ($add_seats as $seat_num) {
-                    $stmt_add->bind_param("sis", $seat_num, $status, $user);
-                    
-                    $res = $stmt_add->execute();
-                    if (!$res) {
+                    if (!$stmt_add || !$stmt_add->bind_param("sis", $seat_num, $status, $user) || !$stmt_add->execute()) {
                         $this->db->rollback();
-                        return new Message(false, "Database error: " . $stmt_add->errno . ".", null);
+                        return new Message(false, "Seats purchase failed: database error ($stmt_add->errno).", null);
                     }
                 }
 
@@ -286,12 +289,9 @@
                 $stmt_add->free_result();
 
                 foreach ($upd_seats as $seat_num) {
-                    $stmt_upd->bind_param("iss", $status, $user, $seat_num);
-                    
-                    $res = $stmt_upd->execute();
-                    if (!$res) {
+                    if (!$stmt_upd || !$stmt_upd->bind_param("iss", $status, $user, $seat_num) || !$stmt_upd->execute()) {
                         $this->db->rollback();
-                        return new Message(false, "Database error: " . $stmt_upd->errno . ".", null);
+                        return new Message(false, "Seats purchase failed: database error ($stmt_upd->errno).", null);
                     }
                 }
 
@@ -300,14 +300,15 @@
             } else {
                 // Free all places
                 $stmt_del = $this->getOrPrepareQuery(Airplane::STMT_DEL_RESERVATION);
+                if (!$stmt_del) {
+                    $this->db->rollback();
+                    return new Message(false, "Seats purchase failed: database error ($stmt_del->errno).", null);
+                }
 
                 foreach ($upd_seats as $seat_num) {
-                    $stmt_del->bind_param("s", $seat_num);
-                    
-                    $res = $stmt_del->execute();
-                    if (!$res) {
+                    if (!$stmt_del->bind_param("s", $seat_num) || !$stmt_del->execute()) {
                         $this->db->rollback();
-                        return new Message(false, "Database error: " . $stmt_del->errno . ".", null);
+                        return new Message(false, "Seats purchase failed: database error ($stmt_del->errno).", null);
                     }
                 }
 
@@ -319,9 +320,9 @@
             $this->db->commit();
 
             if (empty($invalid_seats))
-                return new Message(true, "Seats purchased: " . implode(", ", $seats) . ".", $this->getSeatStatusAll()->getData());
+                return new Message(true, "Seats purchase successful: " . implode(", ", $seats) . " purchased.", $this->getSeatStatusAll()->getData());
             
-            return new Message(false, "Invalid seats: " . implode(", ", $invalid_seats) . ".", $this->getSeatStatusAll()->getData());
+            return new Message(false, "Seat purchase failed: invalid seats (" . implode(", ", $invalid_seats) . ").", $this->getSeatStatusAll()->getData());
         }
 
         /**
@@ -345,11 +346,13 @@
 
             // Prepare the query
             $stmt = $this->getOrPrepareQuery(Airplane::STMT_ADD_USER);
-            $stmt->bind_param("ss", $username, $enc_passw);
+            if (!$stmt || !$stmt->bind_param("ss", $username, $enc_passw)) {
+                $this->db->rollback();
+                return new Message(false, "Registration failed: database error ($stmt->errno).", null);
+            }
 
             // Execute the query and check results
-            $res = $stmt->execute();
-            if (!$res) {
+            if (!$stmt->execute()) {
                 $this->db->rollback();
                 
                 // Check if it is a primary key constraint error
@@ -375,23 +378,21 @@
         public function checkUser($username, $password) {
             // Prepare the query
             $stmt = $this->getOrPrepareQuery(Airplane::STMT_CHECK_PASSWORD);
-            $stmt->bind_param("s", $username);
-
-            // Execute the query and check results
-            $res = $stmt->execute();
-            if (!$res)
+            if (!$stmt || !$stmt->bind_param("s", $username))
                 return new Message(false, "Login failed: database error ($stmt->errno).", null);
 
-            // Read the encoded password
-            $stmt->bind_result($enc_passw);
-            $stmt->fetch();
+            // Execute the query and bind results
+            if (!$stmt->execute() || !$stmt->bind_result($enc_passw))
+                return new Message(false, "Login failed: database error ($stmt->errno).", null);
+
+            // Check the password
+            if (!$stmt->fetch() || !password_verify($password, $enc_passw))
+                return new Message(false, "Login failed: incorrect username or password.", null);
 
             // Free the statements results
             $stmt->free_result();
             
-            // Check the password
-            if (!isset($enc_passw) || !password_verify($password, $enc_passw))
-                return new Message(false, "Login failed: incorrect username or password.", null);
+            // Login ok
             return new Message(true, "Login successful.", null);
         }
     }
