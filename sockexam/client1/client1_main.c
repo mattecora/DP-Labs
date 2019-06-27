@@ -4,7 +4,7 @@
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************
  * NOTE: This program uses a modified version of the sockwrap library, as de- *
- *       scribed in sockwrap.h.											      *
+ *       scribed in sockwrap.h.                                               *
  ******************************************************************************/
 
 #include <stdio.h>

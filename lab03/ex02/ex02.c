@@ -44,7 +44,7 @@ int main(int argc, char const *argv[])
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len;
 
-	prog_name = argv[0];
+    prog_name = argv[0];
 
     /* Check input parameters */
     if (argc < 3)

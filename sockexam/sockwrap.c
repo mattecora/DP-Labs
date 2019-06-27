@@ -190,32 +190,32 @@ int waitfd(int fd, int timeout, int optype)
 
 ssize_t readcharbuf(int fd, char *ptr, int timeout, int errmode)
 {
-	if (line_cnt <= 0)
-	{
-		if ((line_cnt = Read(fd, line_buf, MAXLINE, timeout, errmode)) < 0)
+    if (line_cnt <= 0)
+    {
+        if ((line_cnt = Read(fd, line_buf, MAXLINE, timeout, errmode)) < 0)
             return -1;
-		else if (line_cnt == 0)
-			return 0;
-		line_ptr = line_buf;
-	}
+        else if (line_cnt == 0)
+            return 0;
+        line_ptr = line_buf;
+    }
     line_cnt--;
     *ptr = *line_ptr++;
-	return 1;
+    return 1;
 }
 
 ssize_t recvcharbuf(int fd, char *ptr, int flags, int timeout, int errmode)
 {
-	if (line_cnt <= 0)
-	{
-		if ((line_cnt = Recv(fd, line_buf, MAXLINE, flags, timeout, errmode)) < 0)
+    if (line_cnt <= 0)
+    {
+        if ((line_cnt = Recv(fd, line_buf, MAXLINE, flags, timeout, errmode)) < 0)
             return -1;
-		else if (line_cnt == 0)
-			return 0;
-		line_ptr = line_buf;
-	}
+        else if (line_cnt == 0)
+            return 0;
+        line_ptr = line_buf;
+    }
     line_cnt--;
     *ptr = *line_ptr++;
-	return 1;
+    return 1;
 }
 
 /* -------- Read/write functions -------------------------------------------- */

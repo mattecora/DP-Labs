@@ -4,7 +4,7 @@
  * Matteo Corain - Distributed programming I - A.Y. 2018-19                   *
  ******************************************************************************
  * NOTE: This program uses a modified version of the sockwrap library, as de- *
- *       scribed in sockwrap.h.											      *
+ *       scribed in sockwrap.h.                                               *
  ******************************************************************************/
 
 #include <stdio.h>
@@ -53,7 +53,7 @@ int main(int argc, char const *argv[])
     struct sockaddr_storage client_addr;
     struct addrinfo hints, *server_addrinfo, *ai;
 
-	prog_name = argv[0];
+    prog_name = argv[0];
 
     /* Check input parameters */
     if (argc < 2)
