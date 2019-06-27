@@ -115,7 +115,7 @@
         </div>
     </div>
     
-    <script type="application/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="application/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script type="application/javascript" src="js/ajax.js"></script>
     <script type="application/javascript" src="js/counter.js"></script>
     <script type="application/javascript" src="js/seat.js"></script>

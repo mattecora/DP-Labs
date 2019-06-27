@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <script type="application/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="application/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script type="application/javascript" src="js/login.js"></script>
     <script type="application/javascript"><!--
         $(document).ready(function() {
